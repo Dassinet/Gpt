@@ -51,7 +51,6 @@ export const isAuthenticated = () => {
         const isExpired = decoded.exp < Date.now() / 1000;
         
         if (isExpired) {
-            // Token is expired, try to refresh it
             return false;
         }
         
