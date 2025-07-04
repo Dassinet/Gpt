@@ -763,13 +763,21 @@ const updateApiKeys = async (req, res) => {
 const handleGoogleCallback = async (req, res) => {
     try {
         if (!req.user) {
+            console.error('No user data in request');
             return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Google authentication failed`);
         }
 
         const accessToken = generateAccessToken(req.user._id, req.user.role);
         const refreshToken = generateRefreshTokenAndSetCookie(res, req.user._id, req.user.role);
 
-        // Redirect to frontend with tokens
+        // Add some logging
+        console.log('Generated tokens for user:', {
+            userId: req.user._id,
+            role: req.user.role,
+            redirectingTo: `${process.env.FRONTEND_URL}/auth/google/callback`
+        });
+
+        // Construct redirect URL with tokens
         const redirectUrl = new URL(`${process.env.FRONTEND_URL}/auth/google/callback`);
         redirectUrl.searchParams.set('accessToken', accessToken);
         redirectUrl.searchParams.set('refreshToken', refreshToken);
@@ -777,7 +785,7 @@ const handleGoogleCallback = async (req, res) => {
         return res.redirect(redirectUrl.toString());
     } catch (error) {
         console.error('Google callback error:', error);
-        return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Server error`);
+        return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=${encodeURIComponent(error.message)}`);
     }
 };
 
