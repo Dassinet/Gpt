@@ -88,41 +88,23 @@ export async function middleware(request) {
 
     // If no access token or token needs refresh, and we have refresh token
     if ((!accessToken || shouldRefresh) && refreshToken) {
-        const tokens = await refreshAccessTokenInMiddleware(refreshToken);
-        
-        if (tokens) {
-            const response = NextResponse.next();
-            
-            // Set the new access token
-            response.cookies.set({
-                name: 'accessToken',
-                value: tokens.accessToken,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 60 * 15, // 15 minutes
-                path: '/'
-            });
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh-token`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
 
-            // Update refresh token if provided
-            if (tokens.refreshToken) {
-                response.cookies.set({
-                    name: 'refreshToken',
-                    value: tokens.refreshToken,
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    sameSite: 'lax',
-                    maxAge: 7 * 24 * 60 * 60, // 7 days
-                    path: '/'
-                });
-            }
-
-            return response;
+        if (!response.ok) {
+            // If refresh fails, redirect to login
+            const url = new URL('/auth/sign-in', request.url);
+            url.searchParams.set('redirect', pathname);
+            return NextResponse.redirect(url);
         }
 
-        // If refresh failed, redirect to login
-        const url = new URL('/auth/sign-in', request.url);
-        url.searchParams.set('redirect', pathname);
-        return NextResponse.redirect(url);
+        // The backend will set the cookies automatically
+        return NextResponse.next();
     }
     
     // If no tokens at all, redirect to login

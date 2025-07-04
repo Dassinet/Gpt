@@ -34,8 +34,27 @@ export const removeTokens = () => {
     Cookies.remove(AUTH_TOKENS.refreshToken);
 };
 
-export const getAccessToken = () => {
-    return Cookies.get(AUTH_TOKENS.accessToken);
+export const getAccessToken = async () => {
+    const token = Cookies.get(AUTH_TOKENS.accessToken);
+    if (!token) return null;
+
+    try {
+        const decoded = jwtDecode(token);
+        const isExpired = decoded.exp < Date.now() / 1000;
+        
+        if (isExpired) {
+            // Try to refresh the token
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                return Cookies.get(AUTH_TOKENS.accessToken);
+            }
+            return null;
+        }
+        
+        return token;
+    } catch {
+        return null;
+    }
 };
 
 export const getRefreshToken = () => {
@@ -136,7 +155,7 @@ export const refreshAccessToken = async () => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            credentials: 'include',
+            credentials: 'include', // Important for cookies
         });
 
         if (!response.ok) {
@@ -150,7 +169,7 @@ export const refreshAccessToken = async () => {
             return false;
         }
 
-        setTokens(data.accessToken, data.refreshToken); // Update both tokens if provided
+        // The backend should set the cookies automatically
         return true;
     } catch (error) {
         console.error('Token refresh failed:', error);
