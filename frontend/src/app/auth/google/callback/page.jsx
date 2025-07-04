@@ -46,51 +46,20 @@ function CallbackHandler() {
     );
 }
 
-class ErrorBoundary extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = { hasError: false, error: null };
-    }
-
-    static getDerivedStateFromError(error) {
-        return { hasError: true, error };
-    }
-
-    componentDidCatch(error, errorInfo) {
-        console.error('Callback error:', error, errorInfo);
-    }
-
-    render() {
-        if (this.state.hasError) {
-            return (
-                <div className="text-center text-red-600">
-                    <h2>Something went wrong</h2>
-                    <p>{this.state.error?.message}</p>
-                    <button onClick={() => window.location.href = '/auth/sign-in'}>
-                        Return to Sign In
-                    </button>
-                </div>
-            );
-        }
-
-        return this.props.children;
-    }
-}
-
-// Main page component with Suspense boundary
+// Main page component with Suspense boundary and error handling
 export default function GoogleCallback() {
+    const router = useRouter();
+
     return (
         <div className="flex items-center justify-center min-h-screen">
-            <ErrorBoundary>
-                <Suspense fallback={
-                    <div className="text-center">
-                        <h2 className="text-xl font-semibold mb-2">Loading...</h2>
-                        <p className="text-muted-foreground">Please wait...</p>
-                    </div>
-                }>
-                    <CallbackHandler />
-                </Suspense>
-            </ErrorBoundary>
+            <Suspense fallback={
+                <div className="text-center">
+                    <h2 className="text-xl font-semibold mb-2">Loading...</h2>
+                    <p className="text-muted-foreground">Please wait...</p>
+                </div>
+            }>
+                <CallbackHandler />
+            </Suspense>
         </div>
     );
 } 
