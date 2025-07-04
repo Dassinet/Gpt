@@ -105,6 +105,13 @@ const signIn = async (req, res) => {
         const accessToken = generateAccessToken(user._id, user.role);
         const refreshToken = generateRefreshTokenAndSetCookie(res, user._id, user.role);
 
+        res.cookie('accessToken', accessToken, {
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000, // 15 minutes
+            path: '/',
+        });
+
         user.lastActive = new Date();
         await user.save();
 
@@ -251,22 +258,22 @@ const refreshTokenController = async (req, res) => {
             return res.status(401).json({ success: false, message: 'User not found' });
         }
 
-        // Generate new tokens
         const newAccessToken = generateAccessToken(user._id, user.role);
-        const newRefreshToken = generateRefreshTokenAndSetCookie(res, user._id, user.role);
+
+        res.cookie('accessToken', newAccessToken, {
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000, // 15 minutes
+            path: '/',
+        });
 
         return res.status(200).json({
             success: true,
-            accessToken: newAccessToken,
-            refreshToken: newRefreshToken,
-            user: {
-                _id: user._id,
-                role: user.role,
-            }
+            message: 'Token refreshed successfully',
+            accessToken: newAccessToken
         });
     } catch (error) {
-        console.error('Refresh token error:', error);
-        clearRefreshTokenCookie(res);
+        console.error('Error refreshing token:', error);
         return res.status(401).json({ success: false, message: 'Invalid refresh token' });
     }
 };
