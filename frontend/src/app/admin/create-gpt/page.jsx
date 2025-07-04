@@ -17,7 +17,7 @@ import KnowledgeFileUploader from './components/KnowledgeFileUploader';
 import ImageUploader from './components/ImageUploader';
 import CapabilitiesSelector from './components/CapabilitiesSelector';
 import MarkdownPreview from './components/MarkdownPreview';
-import { getAccessToken, getUser } from '@/lib/auth';
+import { getUser, authenticatedAxios } from '@/lib/auth';
 
 // Loading component for Suspense
 function LoadingState() {
@@ -93,14 +93,8 @@ When providing code examples:
   const fetchGptDetails = async (id) => {
     try {
       console.log('Fetching GPT details for ID:', id);
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/${id}`,
-        { 
-          withCredentials: true,
-          headers: {
-            'Authorization': `Bearer ${getAccessToken()}`
-          }
-        }
+      const response = await authenticatedAxios.get(
+        `/api/gpt/${id}`
       );
 
       console.log('API Response:', response.data);
@@ -252,20 +246,18 @@ When providing code examples:
 
       let response;
       const endpoint = isEditMode 
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/${editGptId}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/create`;
+        ? `/api/gpt/${editGptId}`
+        : `/api/gpt/create`;
         
       const method = isEditMode ? 'put' : 'post';
       
-      response = await axios({
+      response = await authenticatedAxios({
         method,
         url: endpoint,
         data: formDataToSend,
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${getAccessToken()}`
         },
-        withCredentials: true
       });
 
       if (response.data.success) {

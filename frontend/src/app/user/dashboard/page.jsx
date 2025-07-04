@@ -7,8 +7,7 @@ import { Bot, MessageSquare, User, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getUser, getAccessToken, isAuthenticated } from '@/lib/auth';
-import axios from 'axios';
+import { getUser, isAuthenticated, authenticatedAxios } from '@/lib/auth';
 
 const UserDashboard = () => {
   const router = useRouter();
@@ -31,26 +30,6 @@ const UserDashboard = () => {
     checkAuth();
   }, []);
 
-  // Configure axios
-  useEffect(() => {
-    axios.defaults.withCredentials = true;
-    
-    const requestInterceptor = axios.interceptors.request.use(
-      (config) => {
-        const token = getAccessToken();
-        if (token) {
-          config.headers['Authorization'] = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-
-    return () => {
-      axios.interceptors.request.eject(requestInterceptor);
-    };
-  }, []);
-
   // Fetch assigned GPTs
   useEffect(() => {
     const fetchData = async () => {
@@ -65,8 +44,8 @@ const UserDashboard = () => {
         console.log("Requesting GPTs for user ID:", userId);
         
         // Fetch GPTs assigned to this user
-        const assignedGptsResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${userId}`
+        const assignedGptsResponse = await authenticatedAxios.get(
+          `/api/gpt/assigned/${userId}`
         );
         
         if (assignedGptsResponse.data.success) {
@@ -75,12 +54,7 @@ const UserDashboard = () => {
         }
       } catch (error) {
         console.error('Error fetching assigned GPTs:', error);
-        if (error.response?.status === 401) {
-          toast.error('Session expired. Please login again.');
-          // Redirect to login or refresh token
-        } else {
-          toast.error('Failed to fetch assigned GPTs');
-        }
+        toast.error('Failed to fetch assigned GPTs');
       } finally {
         setLoading(false);
       }

@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { getUser, getAccessToken } from "@/lib/auth";
+import { getUser, getAccessToken, authenticatedAxios } from "@/lib/auth";
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,6 @@ import {
   Lock,
 } from "lucide-react";
 import { toast } from "sonner";
-import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -101,11 +100,7 @@ const SettingsPage = () => {
 
   const fetchApiKeys = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
-        }
-      });
+      const response = await authenticatedAxios.get(`/api/auth/me`);
       
       if (response.data.success) {
         setUserData(response.data.user);
@@ -150,13 +145,9 @@ const SettingsPage = () => {
 
     setIsProfileLoading(true);
     try {
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/profile`, {
+      const response = await authenticatedAxios.put(`/api/auth/profile`, {
         name: profileData.name.trim(),
         department: profileData.department.trim()
-      }, {
-        headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
-        }
       });
 
       if (response.data.success) {
@@ -192,13 +183,9 @@ const SettingsPage = () => {
 
     setIsPasswordLoading(true);
     try {
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/password`, {
+      const response = await authenticatedAxios.put(`/api/auth/password`, {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
-      }, {
-        headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
-        }
       });
 
       if (response.data.success) {
@@ -230,11 +217,7 @@ const SettingsPage = () => {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/settings`, settings, {
-        headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
-        }
-      });
+      const response = await authenticatedAxios.put(`/api/settings`, settings);
       if (response.data.success) {
         toast.success("Settings saved successfully!");
       } else {
@@ -278,12 +261,8 @@ const SettingsPage = () => {
         return;
       }
 
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/api-keys`, {
+      const response = await authenticatedAxios.put(`/api/auth/api-keys`, {
         apiKeys: keysToSave
-      }, {
-        headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
-        }
       });
 
       if (response.data.success) {
@@ -309,12 +288,8 @@ const SettingsPage = () => {
       const updatedKeys = { ...apiKeys };
       delete updatedKeys[provider];
       
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/api-keys`, {
+      const response = await authenticatedAxios.put(`/api/auth/api-keys`, {
         apiKeys: updatedKeys
-      }, {
-        headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
-        }
       });
       
       if (response.data.success) {

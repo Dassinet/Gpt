@@ -10,7 +10,7 @@ import InputMessages from "@/components/chat/InputMessages";
 import { ragApiClient } from "@/lib/ragApi";
 import MarkdownStyles from "@/components/MarkdownStyles";
 import ChatMessage from "@/components/chat/ChatMessage";
-import { getUser, isAuthenticated, getAccessToken } from "@/lib/auth";
+import { getUser, isAuthenticated, getAccessToken, authenticatedAxios } from "@/lib/auth";
 
 const ErrorDisplay = ({ title, message, onRetry }) => {
   return (
@@ -118,10 +118,7 @@ function ChatPageContent() {
       console.log("Fetching GPT data for ID:", gptId);
       
       // Call the backend server directly on port 3001
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/gpt/${gptId}`, {
-        headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
-        },
+      const response = await authenticatedAxios.get(`/api/gpt/${gptId}`, {
         timeout: 5000
       });
       
@@ -183,10 +180,7 @@ function ChatPageContent() {
       console.log("Loading conversation history for:", convId);
       
       // Use the correct endpoint from chatRoutes.js: /api/chat/:id
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/${convId}`, {
-        headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
-        },
+      const response = await authenticatedAxios.get(`/api/chat/${convId}`, {
         timeout: 5000
       });
       
@@ -336,10 +330,9 @@ function ChatPageContent() {
               model: gptData.model || 'gpt-4o'
             };
 
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/save`, payload, {
+            const response = await authenticatedAxios.post(`/api/chat/save`, payload, {
               headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getAccessToken()}`
               },
               timeout: 5000
             });

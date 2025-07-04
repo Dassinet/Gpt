@@ -40,9 +40,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import axios from "axios";
 import { toast } from "sonner";
-import { getAccessToken, isAuthenticated, getUserRole } from '@/lib/auth';
+import { isAuthenticated, getUserRole, authenticatedAxios } from '@/lib/auth';
 
 const Teams = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -75,25 +74,6 @@ const Teams = () => {
   });
 
   useEffect(() => {
-    axios.defaults.withCredentials = true;
-    
-    const requestInterceptor = axios.interceptors.request.use(
-      (config) => {
-        const token = getAccessToken();
-        if (token) {
-          config.headers['Authorization'] = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-
-    return () => {
-      axios.interceptors.request.eject(requestInterceptor);
-    };
-  }, []);
-
-  useEffect(() => {
     const fetchData = async () => {
       try {
         if (!isAuthenticated() || getUserRole() !== 'admin') {
@@ -103,11 +83,11 @@ const Teams = () => {
 
         setLoading(true);
         
-        const membersResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/teams`);
+        const membersResponse = await authenticatedAxios.get(`/api/auth/teams`);
         
         let gptsResponse;
         try {
-          gptsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`);
+          gptsResponse = await authenticatedAxios.get(`/api/gpt/all`);
         } catch (error) {
           console.log('GPTs endpoint not available:', error);
           gptsResponse = { data: { success: false, customGpts: [] } };
@@ -118,8 +98,8 @@ const Teams = () => {
           
           const membersWithGptCounts = await Promise.all(members.map(async (member) => {
             try {
-              const gptResponse = await axios.get(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${member._id}`
+              const gptResponse = await authenticatedAxios.get(
+                `/api/gpt/assigned/${member._id}`
               );
               
               const assignedGpts = gptResponse.data.assignedGpts || [];
@@ -204,7 +184,7 @@ const Teams = () => {
 
     try {
       const promises = selectedGPTs.map(gptId => {
-        return axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assign/${gptId}`, {
+        return authenticatedAxios.post(`/api/gpt/assign/${gptId}`, {
           user: { _id: selectedMember.id },
           gpt: { _id: gptId }
         });
@@ -212,8 +192,8 @@ const Teams = () => {
       
       await Promise.all(promises);
       
-      const gptResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${selectedMember.id}`
+      const gptResponse = await authenticatedAxios.get(
+        `/api/gpt/assigned/${selectedMember.id}`
       );
       
       const assignedGpts = gptResponse.data.assignedGpts || [];
@@ -242,7 +222,7 @@ const Teams = () => {
     }
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/invite-user`, {
+      const response = await authenticatedAxios.post(`/api/auth/invite-user`, {
         email: inviteForm.email,
         role: inviteForm.role
       });
@@ -253,7 +233,7 @@ const Teams = () => {
         setInviteForm({ email: '', role: 'user', message: '' });
         
         // Optionally refresh the team list to show the pending invitation
-        const membersResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/teams`);
+        const membersResponse = await authenticatedAxios.get(`/api/auth/teams`);
         if (membersResponse.data.success) {
           const mappedMembers = membersResponse.data.teams.map(member => ({
             id: member._id,
@@ -297,7 +277,7 @@ const Teams = () => {
   const handleRemoveMember = async (member) => {
     if (confirm(`Are you sure you want to remove ${member.name}?`)) {
       try {
-        const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/delete-user/${member.id}`);
+        const response = await authenticatedAxios.delete(`/api/auth/delete-user/${member.id}`);
         
         if (response.data.success) {
           toast.success(`${member.name} has been removed successfully`);

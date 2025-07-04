@@ -22,9 +22,8 @@ import {
   EyeOff,
   Settings
 } from "lucide-react";
-import { getAccessToken, isAuthenticated, removeTokens } from "@/lib/auth";
+import { getAccessToken, isAuthenticated, removeTokens, authenticatedAxios } from "@/lib/auth";
 import { toast } from "sonner";
-import axios from 'axios';
 
 const UserSettings = () => {
   const router = useRouter();
@@ -52,11 +51,7 @@ const UserSettings = () => {
           return;
         }
 
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
-          headers: {
-            'Authorization': `Bearer ${getAccessToken()}`
-          }
-        });
+        const response = await authenticatedAxios.get(`/api/auth/me`);
 
         if (response.data?.success && response.data.user) {
           const user = response.data.user;
@@ -103,11 +98,7 @@ const UserSettings = () => {
         department: formData.department
       };
 
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/profile`, updateData, {
-        headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
-        }
-      });
+      const response = await authenticatedAxios.put(`/api/auth/profile`, updateData);
 
       if (response.data?.success) {
         setUserData(prev => ({
@@ -139,13 +130,9 @@ const UserSettings = () => {
     try {
       setSaving(true);
 
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/password`, {
+      const response = await authenticatedAxios.put(`/api/auth/password`, {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword
-      }, {
-        headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
-        }
       });
 
       if (response.data?.success) {
