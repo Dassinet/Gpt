@@ -12,7 +12,7 @@ import rehypeRaw from 'rehype-raw';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import MarkdownStyles from "@/components/MarkdownStyles";
-import { getUser, getAccessToken } from "@/lib/auth";
+import { getUser, getToken } from "@/lib/auth";
 import axios from 'axios';
 
 // Simple component with no auto-scrolling, no fancy effects
@@ -37,7 +37,8 @@ const InputMessages = ({
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
           headers: {
-            'Authorization': `Bearer ${getAccessToken()}`
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
           }
         });
         
