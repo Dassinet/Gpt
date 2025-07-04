@@ -22,7 +22,7 @@ import {
   EyeOff,
   Settings
 } from "lucide-react";
-import { getToken, isAuthenticated, removeTokens } from "@/lib/auth";
+import { getToken, isAuthenticated, removeToken } from "@/lib/auth"; 
 import { toast } from "sonner";
 import axios from 'axios';
 
@@ -75,7 +75,7 @@ const UserSettings = () => {
         console.error('Error fetching user data:', error);
         toast.error('Failed to load user data');
         if (error.response?.status === 401) {
-          removeTokens();
+          removeToken();
           router.push('/auth/sign-in');
         }
       } finally {
