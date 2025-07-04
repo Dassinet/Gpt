@@ -35,7 +35,7 @@ export default function DashboardLayout({ children }) {
           {isMobile && (
             <div className="flex items-center p-4 border-b">
               <SidebarTrigger className="mr-2" />
-              <h1 className="text-xl font-semibold">DruidX</h1>
+              <h1 className="text-xl font-semibold">EMSA</h1>
             </div>
           )}
           <div className="flex-1 p-4">
