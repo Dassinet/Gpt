@@ -770,37 +770,30 @@ const updateApiKeys = async (req, res) => {
 const handleGoogleCallback = async (req, res) => {
     try {
         if (!req.user) {
-            console.error('No user data in request');
-            return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Google authentication failed`);
+            return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Authentication failed`);
         }
 
-        // Generate tokens
-        const accessToken = generateAccessToken(req.user._id, req.user.role);
-        const refreshToken = generateRefreshTokenAndSetCookie(res, req.user._id, req.user.role);
+        const user = req.user;
+        const accessToken = generateAccessToken(user._id, user.role);
+        const refreshToken = generateRefreshTokenAndSetCookie(res, user._id, user.role);
 
-        // Log the token generation
-        console.log('Generated tokens for user:', {
-            userId: req.user._id,
-            role: req.user.role,
-            hasAccessToken: !!accessToken,
-            hasRefreshToken: !!refreshToken
+        // Set cookies server-side
+        res.cookie('accessToken', accessToken, {
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000, // 15 minutes
+            path: '/',
         });
 
-        // Update user's last active timestamp
-        await User.findByIdAndUpdate(req.user._id, {
-            lastActive: new Date()
-        });
-
-        // Construct redirect URL with tokens
+        // Redirect with tokens as URL parameters
         const redirectUrl = new URL(`${process.env.FRONTEND_URL}/auth/google/callback`);
         redirectUrl.searchParams.set('accessToken', accessToken);
         redirectUrl.searchParams.set('refreshToken', refreshToken);
         
-        console.log('Redirecting to:', redirectUrl.toString());
         return res.redirect(redirectUrl.toString());
     } catch (error) {
         console.error('Google callback error:', error);
-        return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=${encodeURIComponent(error.message)}`);
+        return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Authentication failed`);
     }
 };
 
