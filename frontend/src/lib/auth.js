@@ -7,17 +7,22 @@ export const AUTH_TOKENS = {
 };
 
 export const setTokens = (accessToken, refreshToken) => {
+    const cookieOptions = {
+        secure: true, // Always use secure in production
+        sameSite: 'none', // Required for cross-domain
+        domain: process.env.NEXT_PUBLIC_API_URL || undefined, // Add your domain
+        path: '/',
+    };
+
     if (accessToken) {
         Cookies.set(AUTH_TOKENS.accessToken, accessToken, {
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            expires: 15/1440, // 15 minutes expressed as fraction of days
+            ...cookieOptions,
+            expires: 15/1440, // 15 minutes
         });
     }
     if (refreshToken) {
         Cookies.set(AUTH_TOKENS.refreshToken, refreshToken, {
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            ...cookieOptions,
             expires: 7, // 7 days
         });
     }
@@ -172,10 +177,19 @@ export const initiateGoogleLogin = () => {
 };
 
 export const handleGoogleCallback = async (accessToken, refreshToken) => {
+    console.log('Handling Google callback with tokens:', { 
+        hasAccessToken: !!accessToken, 
+        hasRefreshToken: !!refreshToken 
+    });
+
     if (accessToken && refreshToken) {
         setTokens(accessToken, refreshToken);
         const role = getUserRole();
-        return getRedirectPath(role);
+        console.log('User role after setting tokens:', role);
+        const redirectPath = getRedirectPath(role);
+        console.log('Redirecting to:', redirectPath);
+        return redirectPath;
     }
+    console.log('Missing tokens in callback');
     return '/auth/sign-in?error=Authentication failed';
 }; 
