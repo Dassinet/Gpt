@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
     '/auth/reset-password',
     '/auth/forgot-password',
     '/auth/accept-invitation',
+    '/auth/google/callback',
     '/',
 ];
 
