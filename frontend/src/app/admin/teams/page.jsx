@@ -42,7 +42,7 @@ import {
 } from "@/components/ui/select";
 import axios from "axios";
 import { toast } from "sonner";
-import { getAccessToken, isAuthenticated, getUserRole } from '@/lib/auth';
+import { getToken, isAuthenticated, getUserRole } from '@/lib/auth';
 
 const Teams = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,9 +79,10 @@ const Teams = () => {
     
     const requestInterceptor = axios.interceptors.request.use(
       (config) => {
-        const token = getAccessToken();
+        const token = getToken();
         if (token) {
           config.headers['Authorization'] = `Bearer ${token}`;
+          config.headers['Content-Type'] = 'application/json';
         }
         return config;
       },
@@ -107,7 +108,13 @@ const Teams = () => {
         
         let gptsResponse;
         try {
-          gptsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`);
+          gptsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`, {
+            headers: {
+              'Authorization': `Bearer ${getToken()}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 5000
+          });
         } catch (error) {
           console.log('GPTs endpoint not available:', error);
           gptsResponse = { data: { success: false, customGpts: [] } };
@@ -119,7 +126,14 @@ const Teams = () => {
           const membersWithGptCounts = await Promise.all(members.map(async (member) => {
             try {
               const gptResponse = await axios.get(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${member._id}`
+                `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${member._id}`,
+                {
+                  headers: {
+                    'Authorization': `Bearer ${getToken()}`,
+                    'Content-Type': 'application/json'
+                  },
+                  timeout: 5000
+                }
               );
               
               const assignedGpts = gptResponse.data.assignedGpts || [];
@@ -207,6 +221,12 @@ const Teams = () => {
         return axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assign/${gptId}`, {
           user: { _id: selectedMember.id },
           gpt: { _id: gptId }
+        }, {
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 5000
         });
       });
       
@@ -214,7 +234,13 @@ const Teams = () => {
       
       const gptResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${selectedMember.id}`
-      );
+      , {
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 5000
+      });
       
       const assignedGpts = gptResponse.data.assignedGpts || [];
       
@@ -245,6 +271,12 @@ const Teams = () => {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/invite-user`, {
         email: inviteForm.email,
         role: inviteForm.role
+      }, {
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 5000
       });
       
       if (response.data.success) {
@@ -253,7 +285,13 @@ const Teams = () => {
         setInviteForm({ email: '', role: 'user', message: '' });
         
         // Optionally refresh the team list to show the pending invitation
-        const membersResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/teams`);
+        const membersResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/teams`, {
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 5000
+        });
         if (membersResponse.data.success) {
           const mappedMembers = membersResponse.data.teams.map(member => ({
             id: member._id,
@@ -297,7 +335,13 @@ const Teams = () => {
   const handleRemoveMember = async (member) => {
     if (confirm(`Are you sure you want to remove ${member.name}?`)) {
       try {
-        const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/delete-user/${member.id}`);
+        const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/delete-user/${member.id}`, {
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 5000
+        });
         
         if (response.data.success) {
           toast.success(`${member.name} has been removed successfully`);

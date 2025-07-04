@@ -43,7 +43,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-import { getUser, getUserRole, getAccessToken, isAuthenticated } from '@/lib/auth';
+import { getUser, getUserRole, getToken, isAuthenticated } from '@/lib/auth';
 import axios from 'axios';
 
 const AdminCollections = () => {
@@ -87,7 +87,7 @@ const AdminCollections = () => {
     
     const requestInterceptor = axios.interceptors.request.use(
       (config) => {
-        const token = getAccessToken();
+        const token = getToken();
         if (token) {
           config.headers['Authorization'] = `Bearer ${token}`;
         }
@@ -107,7 +107,13 @@ const AdminCollections = () => {
       setLoading(true);
       
       console.log("Fetching GPTs...");
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`, {
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 5000
+      });
       
       if (response.data.success) {
         const gptData = response.data.customGpts || [];
@@ -154,7 +160,13 @@ const AdminCollections = () => {
 
     try {
       setDeleting(true);
-      const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/${selectedGpt._id}`);
+      const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/${selectedGpt._id}`, {
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 5000
+      });
       
       if (response.data.success) {
         toast.success('GPT deleted successfully');

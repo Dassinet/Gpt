@@ -1,9 +1,10 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const { sendVerificationEmail, sendResetPasswordEmail, sendPasswordResetSuccessEmail, sendInvitationEmail, sendWelcomeEmail } = require("../mail/email");
-const { generateAccessToken, generateRefreshTokenAndSetCookie, clearRefreshTokenCookie } = require("../lib/utils");
+const { generateToken  , clearToken } = require("../lib/utils");
 const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
+const passport = require('passport');
 
 const SignUp = async (req, res) => {
     const { name, email, password } = req.body;
@@ -102,8 +103,15 @@ const signIn = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid credentials' });
         }
 
-        const accessToken = generateAccessToken(user._id, user.role);
-        const refreshToken = generateRefreshTokenAndSetCookie(res, user._id, user.role);
+        const token = generateToken(user._id, user.role);
+
+        // Set token in HTTP-only cookie
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        });
 
         user.lastActive = new Date();
         await user.save();
@@ -111,8 +119,7 @@ const signIn = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: 'Login successful',
-            accessToken,
-            refreshToken,
+            token,
             user: {
                 _id: user._id,
                 name: user.name,
@@ -129,17 +136,8 @@ const signIn = async (req, res) => {
 };
 
 const logout = async (req, res) => {
-    try {
-        const { refreshToken } = req.cookies;
-        if (!refreshToken) {
-            return res.status(401).json({ success: false, message: 'No refresh token found' });
-        }
-        clearRefreshTokenCookie(res);
-        return res.status(200).json({ success: true, message: 'Logged out successfully' });
-    } catch (error) {
-        console.error('Logout Error:', error);
-        return res.status(500).json({ success: false, message: 'Server error' });
-    }
+    clearToken(res);
+    return res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
 const getMe = async (req, res) => {
@@ -235,38 +233,6 @@ const resetpassword = async (req, res) => {
         });
     }
 };
-
-const refreshTokenController = async (req, res) => {
-    try {
-        const refreshToken = req.cookies.refreshToken;
-
-        if (!refreshToken) {
-            return res.status(401).json({ success: false, message: 'Refresh token not found' });
-        }
-
-        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-        const user = await User.findById(decoded.userId);
-
-        if (!user) {
-            return res.status(401).json({ success: false, message: 'User not found' });
-        }
-
-        const newAccessToken = generateAccessToken(user._id, user.role);
-
-        return res.status(200).json({
-            success: true,
-            accessToken: newAccessToken,
-            user: {
-                _id: user._id,
-                role: user.role,
-            }
-        });
-    } catch (error) {
-        console.error('Refresh token error:', error);
-        return res.status(401).json({ success: false, message: 'Invalid refresh token' });
-    }
-};
-
 
 const resendVerification = async (req, res) => {
     const { email, verificationToken } = req.body;
@@ -783,6 +749,15 @@ const updateApiKeys = async (req, res) => {
     }
 };
 
+// Google Auth Initiator
+const googleAuth = passport.authenticate('google', { scope: ['profile', 'email'], session: false });
+
+// Google Auth Callback
+const googleAuthCallback = (req, res) => {
+    const token = generateToken(req.user._id, req.user.role);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/social-callback?token=${token}`);
+};
+
 module.exports = {
     SignUp,
     verifyEmail,
@@ -794,11 +769,12 @@ module.exports = {
     updateApiKeys,
     forgetPassword,
     resetpassword,
-    refreshTokenController,
     resendVerification,
     getTeams,
     deleteUser,
     inviteUser,
     acceptInvitation,
-    validateInvitation
+    validateInvitation,
+    googleAuth,
+    googleAuthCallback
 };

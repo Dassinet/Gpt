@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Calendar, Search, Trash2, Bot, User, RefreshCw } from "lucide-react";
-import { getUser, getAccessToken, isAuthenticated } from "@/lib/auth";
+import { getUser, getToken, isAuthenticated } from "@/lib/auth";
 import { toast } from "sonner";
 import axios from 'axios';
 
@@ -98,7 +98,8 @@ const UserHistory = () => {
       
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/all?userId=${currentUser.userId}`, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -150,7 +151,8 @@ const UserHistory = () => {
       // Delete the main conversation
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/${conversation._id}`, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       });
       
@@ -162,7 +164,8 @@ const UserHistory = () => {
           .map(msg => 
             axios.delete(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/${msg._id}`, {
               headers: {
-                'Authorization': `Bearer ${getAccessToken()}`
+                'Authorization': `Bearer ${getToken()}`,
+                'Content-Type': 'application/json'
               }
             })
           );

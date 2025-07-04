@@ -5,9 +5,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { setTokens, getRedirectPath } from "@/lib/auth";
+import { setToken, getRedirectPath } from "@/lib/auth";
 import axios from "axios";
 import { toast } from "sonner";
+import { jwtDecode } from 'jwt-decode';
 
 export default function SignIn() {
   const router = useRouter();
@@ -33,9 +34,14 @@ export default function SignIn() {
         return;
       }
 
-      setTokens(data.accessToken, data.refreshToken);
-      router.push(getRedirectPath(data.user.role));
-      toast.success('Signed in successfully');
+      setToken(data.token);
+      
+      // Decode token to get user role
+      const decoded = jwtDecode(data.token);
+      const redirectPath = getRedirectPath(decoded.role);
+      
+      // Force a hard navigation to ensure middleware runs
+      window.location.href = redirectPath;
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to sign in';
       toast.error(errorMessage);
@@ -135,13 +141,13 @@ export default function SignIn() {
 
                 <div>
                     <Button
-                        variant="default"
-                        onClick={() => { }}
+                        variant="outline"
+                        type="button"
+                        onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/google`}
                         disabled={isLoading}
                         className="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50"
-                        size="default"
                     >
-                        <FcGoogle size={20} className="mr-2" />
+                        <FcGoogle size={20} />
                         Sign in with Google
                     </Button>
                 </div>

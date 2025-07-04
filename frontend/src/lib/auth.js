@@ -1,62 +1,43 @@
-import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
+import Cookies from 'js-cookie';
 
-export const AUTH_TOKENS = {
-    accessToken: 'accessToken',
-    refreshToken: 'refreshToken',
-};
+const TOKEN_KEY = 'token';
 
-export const setTokens = (accessToken, refreshToken) => {
-    if (accessToken) {
-        Cookies.set(AUTH_TOKENS.accessToken, accessToken, {
+export const setToken = (token) => {
+    if (token) {
+        // Set token in both cookie and localStorage
+        Cookies.set(TOKEN_KEY, token, {
+            expires: 1, // 1 day
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            expires: 15/1440, // 15 minutes expressed as fraction of days
+            sameSite: 'lax'
         });
-    }
-    if (refreshToken) {
-        Cookies.set(AUTH_TOKENS.refreshToken, refreshToken, {
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            expires: 7, // 7 days
-        });
+        localStorage.setItem(TOKEN_KEY, token); // Keep for client-side access
     }
 };
 
-export const removeTokens = () => {
-    Cookies.remove(AUTH_TOKENS.accessToken);
-    Cookies.remove(AUTH_TOKENS.refreshToken);
+export const removeToken = () => {
+    Cookies.remove(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_KEY);
 };
 
-export const getAccessToken = () => {
-    return Cookies.get(AUTH_TOKENS.accessToken);
-};
-
-export const getRefreshToken = () => {
-    return Cookies.get(AUTH_TOKENS.refreshToken);
+export const getToken = () => {
+    return Cookies.get(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
 };
 
 export const isAuthenticated = () => {
-    const token = getAccessToken();
+    const token = getToken();
     if (!token) return false;
 
     try {
         const decoded = jwtDecode(token);
-        const isExpired = decoded.exp < Date.now() / 1000;
-        
-        if (isExpired) {
-            // Token is expired, try to refresh it
-            return false;
-        }
-        
-        return true;
+        return decoded.exp > Date.now() / 1000;
     } catch {
         return false;
     }
 };
 
 export const getUserRole = () => {
-    const token = getAccessToken();
+    const token = getToken();
     if (!token) return null;
 
     try {
@@ -68,42 +49,13 @@ export const getUserRole = () => {
 };
 
 export const getUser = () => {
-    const token = getAccessToken();
+    const token = getToken();
     if (!token) return null;
 
     try {
         return jwtDecode(token);
     } catch {
         return null;
-    }
-};
-
-export const refreshAccessToken = async () => {
-    try {
-        const refreshToken = getRefreshToken();
-        if (!refreshToken) return false;
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/refresh-token`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-        });
-
-        const data = await response.json();
-        
-        if (!data.success) {
-            removeTokens();
-            return false;
-        }
-
-        setTokens(data.accessToken, null); // Only update access token
-        return true;
-    } catch (error) {
-        console.error('Token refresh failed:', error);
-        removeTokens();
-        return false;
     }
 };
 

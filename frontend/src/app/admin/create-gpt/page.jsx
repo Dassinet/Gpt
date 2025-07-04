@@ -17,7 +17,7 @@ import KnowledgeFileUploader from './components/KnowledgeFileUploader';
 import ImageUploader from './components/ImageUploader';
 import CapabilitiesSelector from './components/CapabilitiesSelector';
 import MarkdownPreview from './components/MarkdownPreview';
-import { getAccessToken, getUser } from '@/lib/auth';
+import { getToken, getUser } from '@/lib/auth';
 
 // Loading component for Suspense
 function LoadingState() {
@@ -98,7 +98,8 @@ When providing code examples:
         { 
           withCredentials: true,
           headers: {
-            'Authorization': `Bearer ${getAccessToken()}`
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
           }
         }
       );
@@ -263,7 +264,8 @@ When providing code examples:
         data: formDataToSend,
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         },
         withCredentials: true
       });

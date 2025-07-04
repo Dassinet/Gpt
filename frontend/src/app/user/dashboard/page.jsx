@@ -7,7 +7,7 @@ import { Bot, MessageSquare, User, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getUser, getAccessToken, isAuthenticated } from '@/lib/auth';
+import { getUser, getToken, isAuthenticated } from '@/lib/auth';
 import axios from 'axios';
 
 const UserDashboard = () => {
@@ -37,9 +37,10 @@ const UserDashboard = () => {
     
     const requestInterceptor = axios.interceptors.request.use(
       (config) => {
-        const token = getAccessToken();
+        const token = getToken();
         if (token) {
           config.headers['Authorization'] = `Bearer ${token}`;
+          config.headers['Content-Type'] = 'application/json';
         }
         return config;
       },
@@ -67,7 +68,13 @@ const UserDashboard = () => {
         // Fetch GPTs assigned to this user
         const assignedGptsResponse = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${userId}`
-        );
+        , {
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 5000
+        });
         
         if (assignedGptsResponse.data.success) {
           console.log("GPTs received:", assignedGptsResponse.data.assignedGpts);

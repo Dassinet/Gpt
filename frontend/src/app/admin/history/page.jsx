@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Calendar, Search, Trash2, Bot, User } from "lucide-react";
-import { getAccessToken, isAuthenticated } from "@/lib/auth";
+import { getToken, isAuthenticated } from "@/lib/auth";
 import { toast } from "sonner";
 import axios from 'axios';
 
@@ -32,7 +32,8 @@ export default function AdminHistory() {
 
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
           headers: {
-            'Authorization': `Bearer ${getAccessToken()}`
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
           }
         });
 
@@ -57,7 +58,8 @@ export default function AdminHistory() {
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/all?userId=${currentUser._id}`, {
           headers: {
-            'Authorization': `Bearer ${getAccessToken()}`
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
           }
         });
 
@@ -94,7 +96,8 @@ export default function AdminHistory() {
     try {
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/${conversationId}`, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       });
 

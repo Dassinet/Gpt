@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getUser, getUserRole, getAccessToken, isAuthenticated } from '@/lib/auth';
+import { getUser, getUserRole, getToken, isAuthenticated } from '@/lib/auth';
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,9 +72,10 @@ const AdminDashboard = () => {
         
         const requestInterceptor = axios.interceptors.request.use(
             (config) => {
-                const token = getAccessToken();
+                const token = getToken();
                 if (token) {
                     config.headers['Authorization'] = `Bearer ${token}`;
+                    config.headers['Content-Type'] = 'application/json';
                 }
                 return config;
             },
@@ -89,7 +90,13 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setIsRefreshing(true);
-            const gptsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`);
+              const gptsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`, {
+                headers: {
+                    'Authorization': `Bearer ${getToken()}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 5000
+            });
             
             if (gptsResponse.data.success) {
                 const gptsData = gptsResponse.data.customGpts;

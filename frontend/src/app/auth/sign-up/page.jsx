@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "sonner";
+import { setToken } from '@/lib/auth';
 
 export default function SignUp() {
   const router = useRouter();
@@ -33,7 +34,8 @@ export default function SignUp() {
         return;
       }
 
-      router.push(`/auth/verify-email?token=${data.verificationToken}`);
+      setToken(data.token);
+      router.push(getRedirectPath(data.user.role));
       toast.success('Signed up successfully, please check your email for verification');
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to sign up';
@@ -149,7 +151,8 @@ export default function SignUp() {
                 <div>
                     <Button
                         variant="default"
-                        onClick={() => { }}
+                        type="button"
+                        onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/google`}
                         disabled={isLoading}
                         className="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50"
                         size="default"

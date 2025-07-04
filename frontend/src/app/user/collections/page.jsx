@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-import { getUser, getAccessToken, isAuthenticated } from '@/lib/auth';
+import { getUser, getToken, isAuthenticated } from '@/lib/auth';
 import axios from 'axios';
 
 const UserCollections = () => {
@@ -50,9 +50,10 @@ const UserCollections = () => {
     
     const requestInterceptor = axios.interceptors.request.use(
       (config) => {
-        const token = getAccessToken();
+        const token = getToken();
         if (token) {
           config.headers['Authorization'] = `Bearer ${token}`;
+          config.headers['Content-Type'] = 'application/json';
         }
         return config;
       },
@@ -77,7 +78,13 @@ const UserCollections = () => {
         // Fetch GPTs assigned to this user
         const assignedGptsResponse = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${userId}`
-        );
+        , {
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 5000
+        });
         
         if (assignedGptsResponse.data.success) {
           setAssignedGpts(assignedGptsResponse.data.assignedGpts || []);

@@ -10,7 +10,7 @@ import InputMessages from "@/components/chat/InputMessages";
 import { ragApiClient } from "@/lib/ragApi";
 import MarkdownStyles from "@/components/MarkdownStyles";
 import ChatMessage from "@/components/chat/ChatMessage";
-import { getUser, isAuthenticated, getAccessToken } from "@/lib/auth";
+import { getUser, isAuthenticated, getToken } from "@/lib/auth";
 
 const ErrorDisplay = ({ title, message, onRetry }) => {
   return (
@@ -120,7 +120,8 @@ function ChatPageContent() {
       // Call the backend server directly on port 3001
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/gpt/${gptId}`, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         },
         timeout: 5000
       });
@@ -185,7 +186,8 @@ function ChatPageContent() {
       // Use the correct endpoint from chatRoutes.js: /api/chat/:id
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/${convId}`, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         },
         timeout: 5000
       });
@@ -339,7 +341,7 @@ function ChatPageContent() {
             const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/save`, payload, {
               headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getAccessToken()}`
+                'Authorization': `Bearer ${getToken()}`
               },
               timeout: 5000
             });

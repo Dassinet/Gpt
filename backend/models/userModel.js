@@ -4,7 +4,8 @@ const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: function() {
-            return this.isVerified === true;
+            // Name is not required on initial creation for invited users
+            return !this.invitationToken && !this.googleId;
         }
     },
     email: {
@@ -12,10 +13,16 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
     password: {
         type: String,
         required: function() {
-            return this.isVerified === true;
+            // Password is not required if signing up with Google or accepting an invitation
+            return !this.googleId && !this.invitationToken;
         },
         select: false,
     },

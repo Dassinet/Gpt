@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { getUser, getAccessToken } from "@/lib/auth";
+import { getUser, getToken } from "@/lib/auth";
 import {
   Dialog,
   DialogContent,
@@ -103,7 +103,8 @@ const SettingsPage = () => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       });
       
@@ -155,7 +156,8 @@ const SettingsPage = () => {
         department: profileData.department.trim()
       }, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -197,7 +199,8 @@ const SettingsPage = () => {
         newPassword: passwordData.newPassword
       }, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -232,7 +235,8 @@ const SettingsPage = () => {
     try {
       const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/settings`, settings, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       });
       if (response.data.success) {
@@ -282,7 +286,8 @@ const SettingsPage = () => {
         apiKeys: keysToSave
       }, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -313,7 +318,8 @@ const SettingsPage = () => {
         apiKeys: updatedKeys
       }, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       });
       

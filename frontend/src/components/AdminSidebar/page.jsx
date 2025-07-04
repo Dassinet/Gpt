@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Button } from "../ui/button"
 import { useState } from "react";
-import { removeTokens, getAccessToken } from "@/lib/auth";
+import { removeTokens, getToken } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axios from "axios";
@@ -61,13 +61,13 @@ export default function AdminSidebar() {
       // Call backend logout endpoint
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/logout`, {}, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         },
         withCredentials: true // Important for sending cookies
       });
 
       if (response.data.success) {
-        // Clear local tokens after successful server logout
         removeTokens();
         toast.success('Logged out successfully');
         router.push('/auth/sign-in');

@@ -22,7 +22,7 @@ import {
   EyeOff,
   Settings
 } from "lucide-react";
-import { getAccessToken, isAuthenticated, removeTokens } from "@/lib/auth";
+import { getToken, isAuthenticated, removeTokens } from "@/lib/auth";
 import { toast } from "sonner";
 import axios from 'axios';
 
@@ -54,7 +54,8 @@ const UserSettings = () => {
 
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
           headers: {
-            'Authorization': `Bearer ${getAccessToken()}`
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
           }
         });
 
@@ -105,7 +106,8 @@ const UserSettings = () => {
 
       const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/profile`, updateData, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -144,7 +146,8 @@ const UserSettings = () => {
         newPassword: formData.newPassword
       }, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         }
       });
 

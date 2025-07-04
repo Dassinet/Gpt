@@ -6,6 +6,8 @@ const cookieParser = require("cookie-parser");
 const connectDB = require("./lib/db");
 const gptRoutes = require("./routes/gptRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const passport = require('passport');
+require('./config/passport');
 
 dotenv.config();
 
@@ -28,6 +30,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cookieParser());
+
+app.use(passport.initialize());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/gpt", gptRoutes); 

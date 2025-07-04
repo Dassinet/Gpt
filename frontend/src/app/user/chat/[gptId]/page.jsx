@@ -9,7 +9,7 @@ import ChatHeader from "@/components/chat/ChatHeader";
 import InputMessages from "@/components/chat/InputMessages";
 import ChatMessage from "@/components/chat/ChatMessage";
 import { ragApiClient } from "@/lib/ragApi";
-import { getUser, isAuthenticated, getAccessToken } from "@/lib/auth";
+import { getUser, isAuthenticated, getToken } from "@/lib/auth";
 
 const ErrorDisplay = ({ title, message, onRetry }) => {
   return (
@@ -119,7 +119,8 @@ function ChatPageContent() {
       // Use the user endpoint that checks assignment
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/gpt/user/${gptId}`, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         },
         timeout: 10000
       });
@@ -178,7 +179,8 @@ function ChatPageContent() {
       
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/${convId}`, {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         },
         timeout: 5000
       });
@@ -320,7 +322,8 @@ function ChatPageContent() {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/save`, payload, {
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
         },
         timeout: 5000
       });
