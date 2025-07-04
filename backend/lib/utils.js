@@ -11,41 +11,23 @@ const generateRefreshTokenAndSetCookie = (res, userId, role) => {
         { expiresIn: '7d' }
     );
 
-    // Set refresh token as HTTP-only cookie
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        secure: true,
+        sameSite: 'none',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
         path: '/',
     });
 
-    const accessToken = generateAccessToken(userId, role);
-    
-    // Set access token as regular cookie
-    res.cookie('accessToken', accessToken, {
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 15 * 60 * 1000, // 15 minutes
-        path: '/',
-    });
-
-    return { refreshToken, accessToken };
+    return refreshToken;
 };
 
 const clearRefreshTokenCookie = (res) => {
     res.cookie('refreshToken', '', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        expires: new Date(0),
-        path: '/'
-    });
-    res.cookie('accessToken', '', {
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        expires: new Date(0),
-        path: '/'
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        expires: new Date(0)
     });
 };
 

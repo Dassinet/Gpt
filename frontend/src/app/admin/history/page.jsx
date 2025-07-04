@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Calendar, Search, Trash2, Bot, User } from "lucide-react";
-import { isAuthenticated, authenticatedAxios } from "@/lib/auth";
+import { getAccessToken, isAuthenticated } from "@/lib/auth";
 import { toast } from "sonner";
 import axios from 'axios';
 
@@ -30,7 +30,11 @@ export default function AdminHistory() {
           return;
         }
 
-        const response = await authenticatedAxios.get(`/api/auth/me`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${getAccessToken()}`
+          }
+        });
 
         if (response.data?.success) {
           setCurrentUser(response.data.user);
@@ -51,7 +55,11 @@ export default function AdminHistory() {
       if (!currentUser?._id) return;
 
       try {
-        const response = await authenticatedAxios.get(`/api/chat/all?userId=${currentUser._id}`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/all?userId=${currentUser._id}`, {
+          headers: {
+            'Authorization': `Bearer ${getAccessToken()}`
+          }
+        });
 
         if (response.data?.success) {
           setConversations(response.data.data || []);
@@ -84,7 +92,11 @@ export default function AdminHistory() {
   // Delete conversation
   const handleDelete = async (conversationId) => {
     try {
-      await authenticatedAxios.delete(`/api/chat/${conversationId}`);
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/${conversationId}`, {
+        headers: {
+          'Authorization': `Bearer ${getAccessToken()}`
+        }
+      });
 
       setConversations(prev => prev.filter(conv => conv._id !== conversationId));
       toast.success('Conversation deleted');

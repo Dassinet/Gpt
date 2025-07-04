@@ -1,7 +1,5 @@
-// frontend/src/lib/auth.js
-import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
-import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 export const AUTH_TOKENS = {
     accessToken: 'accessToken',
@@ -9,6 +7,8 @@ export const AUTH_TOKENS = {
 };
 
 export const setTokens = (accessToken, refreshToken) => {
+    console.log('Setting tokens:', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
+    
     if (accessToken) {
         Cookies.set(AUTH_TOKENS.accessToken, accessToken, {
             secure: process.env.NODE_ENV === 'production',
@@ -16,6 +16,7 @@ export const setTokens = (accessToken, refreshToken) => {
             expires: 15/1440, // 15 minutes
             path: '/',
         });
+        console.log('Access token set, checking if readable:', !!Cookies.get(AUTH_TOKENS.accessToken));
     }
     if (refreshToken) {
         Cookies.set(AUTH_TOKENS.refreshToken, refreshToken, {
@@ -24,7 +25,13 @@ export const setTokens = (accessToken, refreshToken) => {
             expires: 7, // 7 days
             path: '/',
         });
+        console.log('Refresh token set, checking if readable:', !!Cookies.get(AUTH_TOKENS.refreshToken));
     }
+};
+
+export const removeTokens = () => {
+    Cookies.remove(AUTH_TOKENS.accessToken);
+    Cookies.remove(AUTH_TOKENS.refreshToken);
 };
 
 export const getAccessToken = () => {
@@ -35,18 +42,20 @@ export const getRefreshToken = () => {
     return Cookies.get(AUTH_TOKENS.refreshToken);
 };
 
-export const removeTokens = () => {
-    Cookies.remove(AUTH_TOKENS.accessToken);
-    Cookies.remove(AUTH_TOKENS.refreshToken);
-};
-
 export const isAuthenticated = () => {
     const token = getAccessToken();
     if (!token) return false;
 
     try {
         const decoded = jwtDecode(token);
-        return decoded.exp > Date.now() / 1000;
+        const isExpired = decoded.exp < Date.now() / 1000;
+        
+        if (isExpired) {
+            // Token is expired, try to refresh it
+            return false;
+        }
+        
+        return true;
     } catch {
         return false;
     }
@@ -54,12 +63,15 @@ export const isAuthenticated = () => {
 
 export const getUserRole = () => {
     const token = getAccessToken();
+    console.log('Getting user role, token exists:', !!token);
     if (!token) return null;
 
     try {
         const decoded = jwtDecode(token);
+        console.log('Decoded token:', decoded);
         return decoded.role || 'user';
-    } catch {
+    } catch (error) {
+        console.error('Error decoding token:', error);
         return null;
     }
 };
@@ -72,6 +84,79 @@ export const getUser = () => {
         return jwtDecode(token);
     } catch {
         return null;
+    }
+};
+
+const REFRESH_TOKEN_THRESHOLD = 60 * 1000; // 1 minute before expiry
+
+export const setupTokenRefresh = () => {
+    // Check token expiration periodically
+    const checkTokenExpiration = async () => {
+        const accessToken = getAccessToken();
+        if (!accessToken) return;
+
+        try {
+            const decoded = jwtDecode(accessToken);
+            const expirationTime = decoded.exp * 1000; // Convert to milliseconds
+            const currentTime = Date.now();
+            const timeUntilExpiry = expirationTime - currentTime;
+
+            // If token is about to expire within the threshold, refresh it
+            if (timeUntilExpiry <= REFRESH_TOKEN_THRESHOLD) {
+                const success = await refreshAccessToken();
+                if (!success) {
+                    // If refresh fails, redirect to login
+                    removeTokens();
+                    window.location.href = '/auth/sign-in';
+                }
+            }
+        } catch (error) {
+            console.error('Token refresh check failed:', error);
+            removeTokens();
+            window.location.href = '/auth/sign-in';
+        }
+    };
+
+    // Check every 30 seconds
+    const intervalId = setInterval(checkTokenExpiration, 30000);
+    
+    // Initial check
+    checkTokenExpiration();
+
+    // Cleanup on unmount
+    return () => clearInterval(intervalId);
+};
+
+export const refreshAccessToken = async () => {
+    try {
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) return false;
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh-token`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            throw new Error('Refresh token request failed');
+        }
+
+        const data = await response.json();
+        
+        if (!data.success) {
+            removeTokens();
+            return false;
+        }
+
+        setTokens(data.accessToken, data.refreshToken); // Update both tokens if provided
+        return true;
+    } catch (error) {
+        console.error('Token refresh failed:', error);
+        removeTokens();
+        return false;
     }
 };
 
@@ -102,93 +187,17 @@ export const handleGoogleCallback = async (accessToken, refreshToken) => {
     });
 
     if (accessToken && refreshToken) {
-        // Set the tokens in cookies
         setTokens(accessToken, refreshToken);
         
-        // Wait a moment for cookies to be set
+        // Add a small delay to ensure cookies are set
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        // Get user role from the token
-        const decoded = jwtDecode(accessToken);
-        const role = decoded.role || 'user';
-        
-        console.log('User role from token:', role);
+        const role = getUserRole();
+        console.log('User role after setting tokens:', role);
         const redirectPath = getRedirectPath(role);
         console.log('Redirecting to:', redirectPath);
         return redirectPath;
     }
-    
-    console.error('Missing tokens in callback');
+    console.log('Missing tokens in callback');
     return '/auth/sign-in?error=Authentication failed';
-};
-
-// Create axios instance with interceptors
-export const createAuthenticatedAxios = () => {
-    const instance = axios.create({
-        baseURL: process.env.NEXT_PUBLIC_API_URL,
-        withCredentials: true,
-    });
-
-    instance.interceptors.request.use(
-        (config) => {
-            const token = getAccessToken();
-            if (token) {
-                config.headers['Authorization'] = `Bearer ${token}`;
-            }
-            return config;
-        },
-        (error) => Promise.reject(error)
-    );
-
-    instance.interceptors.response.use(
-        (response) => response,
-        async (error) => {
-            const originalRequest = error.config;
-
-            // If error is 401 and we haven't tried to refresh token yet
-            if (error.response?.status === 401 && !originalRequest._retry) {
-                originalRequest._retry = true;
-
-                try {
-                    // Try to refresh the token
-                    const refreshToken = getRefreshToken();
-                    if (!refreshToken) {
-                        throw new Error('No refresh token available');
-                    }
-
-                    const response = await axios.post(
-                        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh-token`,
-                        {},
-                        { 
-                            withCredentials: true,
-                            headers: {
-                                'Authorization': `Bearer ${refreshToken}`
-                            }
-                        }
-                    );
-
-                    if (response.data.success) {
-                        const { accessToken, refreshToken } = response.data;
-                        setTokens(accessToken, refreshToken);
-                        
-                        // Update the authorization header
-                        originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
-                        return instance(originalRequest);
-                    }
-                } catch (refreshError) {
-                    // If refresh fails, logout user
-                    removeTokens();
-                    window.location.href = '/auth/sign-in';
-                    return Promise.reject(refreshError);
-                }
-            }
-
-            return Promise.reject(error);
-        }
-    );
-
-    return instance;
-};
-
-// Create a singleton instance
-export const authenticatedAxios = createAuthenticatedAxios();
+}; 

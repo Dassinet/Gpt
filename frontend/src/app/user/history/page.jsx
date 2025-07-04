@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Calendar, Search, Trash2, Bot, User, RefreshCw } from "lucide-react";
-import { getUser, isAuthenticated, authenticatedAxios } from "@/lib/auth";
+import { getUser, getAccessToken, isAuthenticated } from "@/lib/auth";
 import { toast } from "sonner";
+import axios from 'axios';
 
 const UserHistory = () => {
   const router = useRouter();
@@ -95,7 +96,11 @@ const UserHistory = () => {
     try {
       setIsRefreshing(showToast);
       
-      const response = await authenticatedAxios.get(`/api/chat/all?userId=${currentUser.userId}`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/all?userId=${currentUser.userId}`, {
+        headers: {
+          'Authorization': `Bearer ${getAccessToken()}`
+        }
+      });
 
       if (response.data?.success) {
         const rawChats = response.data.data || [];
@@ -143,7 +148,11 @@ const UserHistory = () => {
   const handleDelete = async (conversation) => {
     try {
       // Delete the main conversation
-      await authenticatedAxios.delete(`/api/chat/${conversation._id}`);
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/${conversation._id}`, {
+        headers: {
+          'Authorization': `Bearer ${getAccessToken()}`
+        }
+      });
       
       // If there are additional messages to delete
       if (conversation.allMessages && conversation.allMessages.length > 1) {
@@ -151,7 +160,11 @@ const UserHistory = () => {
         const deletePromises = conversation.allMessages
           .filter(msg => msg._id !== conversation._id)
           .map(msg => 
-            authenticatedAxios.delete(`/api/chat/${msg._id}`)
+            axios.delete(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/${msg._id}`, {
+              headers: {
+                'Authorization': `Bearer ${getAccessToken()}`
+              }
+            })
           );
           
         // Wait for all deletions to complete

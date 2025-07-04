@@ -252,12 +252,12 @@ const refreshTokenController = async (req, res) => {
         }
 
         // Generate new tokens
-        const accessToken = generateAccessToken(user._id, user.role);
+        const newAccessToken = generateAccessToken(user._id, user.role);
         const newRefreshToken = generateRefreshTokenAndSetCookie(res, user._id, user.role);
 
         return res.status(200).json({
             success: true,
-            accessToken,
+            accessToken: newAccessToken,
             refreshToken: newRefreshToken,
             user: {
                 _id: user._id,
@@ -266,6 +266,7 @@ const refreshTokenController = async (req, res) => {
         });
     } catch (error) {
         console.error('Refresh token error:', error);
+        clearRefreshTokenCookie(res);
         return res.status(401).json({ success: false, message: 'Invalid refresh token' });
     }
 };

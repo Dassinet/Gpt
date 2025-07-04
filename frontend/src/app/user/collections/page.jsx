@@ -18,7 +18,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-import { getUser, isAuthenticated, authenticatedAxios } from '@/lib/auth';
+import { getUser, getAccessToken, isAuthenticated } from '@/lib/auth';
+import axios from 'axios';
 
 const UserCollections = () => {
   const router = useRouter();
@@ -43,6 +44,26 @@ const UserCollections = () => {
     checkAuth();
   }, [router]);
 
+  // Configure axios
+  useEffect(() => {
+    axios.defaults.withCredentials = true;
+    
+    const requestInterceptor = axios.interceptors.request.use(
+      (config) => {
+        const token = getAccessToken();
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+    };
+  }, []);
+
   // Fetch assigned GPTs
   useEffect(() => {
     const fetchData = async () => {
@@ -54,8 +75,8 @@ const UserCollections = () => {
         const userId = user.userId;
         
         // Fetch GPTs assigned to this user
-        const assignedGptsResponse = await authenticatedAxios.get(
-          `/api/gpt/assigned/${userId}`
+        const assignedGptsResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${userId}`
         );
         
         if (assignedGptsResponse.data.success) {

@@ -80,13 +80,33 @@ const AdminCollections = () => {
     checkAuth();
   }, [router]);
 
+  // Configure axios
+  useEffect(() => {
+    axios.defaults.withCredentials = true;
+    
+    const requestInterceptor = axios.interceptors.request.use(
+      (config) => {
+        const token = getAccessToken();
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+    };
+  }, []);
+
   // Fetch all GPTs
   const fetchGpts = useCallback(async () => {
     try {
       setLoading(true);
       
       console.log("Fetching GPTs...");
-      const response = await authenticatedAxios.get(`/api/gpt/all`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`);
       
       if (response.data.success) {
         const gptData = response.data.customGpts || [];
@@ -133,7 +153,7 @@ const AdminCollections = () => {
 
     try {
       setDeleting(true);
-      const response = await authenticatedAxios.delete(`/api/gpt/${selectedGpt._id}`);
+      const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/${selectedGpt._id}`);
       
       if (response.data.success) {
         toast.success('GPT deleted successfully');

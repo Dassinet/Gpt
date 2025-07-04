@@ -9,7 +9,7 @@ import ChatHeader from "@/components/chat/ChatHeader";
 import InputMessages from "@/components/chat/InputMessages";
 import ChatMessage from "@/components/chat/ChatMessage";
 import { ragApiClient } from "@/lib/ragApi";
-import { getUser, isAuthenticated, getAccessToken, authenticatedAxios } from "@/lib/auth";
+import { getUser, isAuthenticated, getAccessToken } from "@/lib/auth";
 
 const ErrorDisplay = ({ title, message, onRetry }) => {
   return (
@@ -124,7 +124,10 @@ function ChatPageContent() {
       console.log("Fetching GPT data for ID:", gptId);
       
       // Use the user endpoint that checks assignment
-      const response = await authenticatedAxios.get(`/api/gpt/user/${gptId}`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/gpt/user/${gptId}`, {
+        headers: {
+          'Authorization': `Bearer ${getAccessToken()}`
+        },
         timeout: 10000
       });
       
@@ -190,7 +193,10 @@ function ChatPageContent() {
     try {
       console.log("Loading conversation history for:", convId);
       
-      const response = await authenticatedAxios.get(`/api/chat/${convId}`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/${convId}`, {
+        headers: {
+          'Authorization': `Bearer ${getAccessToken()}`
+        },
         timeout: 5000
       });
       
@@ -328,7 +334,11 @@ function ChatPageContent() {
         model: gptData.model || 'gpt-4o'
       };
 
-      const response = await authenticatedAxios.post(`/api/chat/save`, payload, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/save`, payload, {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAccessToken()}`
+        },
         timeout: 5000
       });
 
