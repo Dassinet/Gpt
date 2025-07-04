@@ -154,7 +154,7 @@ const WELCOME_EMAIL_TEMPLATE = `
   <div class="container">
     <div class="header">
         <!-- Assuming you have a logo URL or can embed it -->
-        <img src="https://dridx.ai/Horizontal EMSA logo.png">   
+        <img src="https://ems.ai/Horizontal EMSA logo.png"> 
         <h1>Welcome to EMSA!</h1>
     </div>
     <div class="content">
@@ -162,7 +162,7 @@ const WELCOME_EMAIL_TEMPLATE = `
       <p>Thank you for joining EMSA. We are excited to have you as part of our community.</p>
       <p>EMSA helps you make smarter decisions with AI-powered dashboards and insights. Explore your data, generate reports, and streamline your operations.</p>
       <p style="text-align: center;">
-        <a href="https://emsalabs.com" class="button">Go to Your Dashboard</a>
+        <a href="https://ems.ai" class="button">Go to Your Dashboard</a>
       </p>
       <p>If you have any questions, feel free to contact our support team.</p>
       <p>Best regards,<br>The EMSA Team</p>

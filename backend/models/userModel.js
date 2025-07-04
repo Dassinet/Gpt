@@ -56,11 +56,6 @@ const userSchema = new mongoose.Schema({
     lastVerificationResent: Date,
     invitationToken: String,
     invitationTokenExpiresAt: Date,
-    googleId: {
-        type: String,
-        sparse: true,
-        unique: true
-    },
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { setTokens, getRedirectPath, initiateGoogleLogin } from "@/lib/auth";
+import { setTokens, getRedirectPath } from "@/lib/auth";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -46,20 +46,6 @@ export default function SignIn() {
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const GoogleLoginButton = () => {
-    return (
-      <Button
-        type="button"
-        variant="default"
-        className="w-full flex items-center justify-center gap-2"
-        onClick={initiateGoogleLogin}
-      >
-        <FcGoogle className="w-5 h-5" />
-      <span className="text-black">Sign in with Google</span>
-      </Button>
-    );
   };
 
   return (
@@ -147,17 +133,18 @@ export default function SignIn() {
                     <div className="flex-1 h-px bg-gray-300"></div>
                 </div>
 
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-white px-2 text-muted-foreground">
-                            Or continue with
-                        </span>
-                    </div>
+                <div>
+                    <Button
+                        variant="default"
+                        onClick={() => { }}
+                        disabled={isLoading}
+                        className="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50"
+                        size="default"
+                    >
+                        <FcGoogle size={20} className="mr-2" />
+                        Sign in with Google
+                    </Button>
                 </div>
-                <GoogleLoginButton />
             </form>
 
             <p className="text-center mt-8 text-gray-600">

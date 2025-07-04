@@ -1,45 +1,21 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
-const { generateAccessToken, generateRefreshTokenAndSetCookie } = require('../lib/utils');
 
 const protectRoute = async (req, res, next) => {
-    let token = req.cookies.accessToken;
+    let token;
+
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+    }
+    else if (req.cookies && req.cookies.accessToken) {
+        token = req.cookies.accessToken;
+    }
 
     if (!token) {
-        const refreshToken = req.cookies.refreshToken;
-        if (!refreshToken) {
-            return res.status(401).json({
-                success: false,
-                message: 'Authentication failed: No tokens provided.'
-            });
-        }
-        
-        try {
-            // If no access token, try to refresh immediately
-            const decodedRefresh = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-            const user = await User.findById(decodedRefresh.userId);
-
-            if (!user) {
-                return res.status(401).json({ success: false, message: 'Invalid refresh token.' });
-            }
-
-            token = generateAccessToken(user._id, user.role);
-            res.cookie('accessToken', token, {
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 15 * 60 * 1000,
-                path: '/',
-            });
-            
-            req.user = user;
-            return next();
-
-        } catch (error) {
-            return res.status(401).json({
-                success: false,
-                message: 'Authentication failed: Invalid refresh token.'
-            });
-        }
+        return res.status(401).json({
+            success: false,
+            message: 'Please log in to access this resource'
+        });
     }
 
     try {
@@ -52,48 +28,13 @@ const protectRoute = async (req, res, next) => {
                 message: 'User not found'
             });
         }
-
         req.user = user;
         next();
     } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            const refreshToken = req.cookies.refreshToken;
-            if (!refreshToken) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Authentication failed: Token expired and no refresh token.'
-                });
-            }
-
-            try {
-                const decodedRefresh = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-                const user = await User.findById(decodedRefresh.userId);
-
-                if (!user) {
-                    return res.status(401).json({ success: false, message: 'Invalid refresh token.' });
-                }
-
-                const newAccessToken = generateAccessToken(user._id, user.role);
-                res.cookie('accessToken', newAccessToken, {
-                    secure: process.env.NODE_ENV === 'production',
-                    sameSite: 'lax',
-                    maxAge: 15 * 60 * 1000,
-                    path: '/',
-                });
-
-                req.user = user;
-                return next();
-            } catch (refreshError) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Authentication failed: Could not refresh token.'
-                });
-            }
-        }
-
+        console.error('JWT verification failed:', error.message);
         return res.status(401).json({
             success: false,
-            message: 'Authentication failed: Invalid token.'
+            message: 'Invalid or expired token. Please log in again.'
         });
     }
 };

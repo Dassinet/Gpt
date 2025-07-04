@@ -168,7 +168,7 @@ export default function AcceptInvitation({ params }) {
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl">Complete Your Account</CardTitle>
           <CardDescription>
-            You've been invited to join EMSA. Set up your account to get started.
+            You've been invited to join DruidX. Set up your account to get started.
           </CardDescription>
           {email && (
             <div className="mt-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-md">

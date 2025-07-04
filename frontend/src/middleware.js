@@ -29,37 +29,6 @@ const USER_PATHS = [
     '/user/history',
 ];
 
-async function refreshAccessTokenInMiddleware(refreshToken) {
-    try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh-token`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Cookie': `refreshToken=${refreshToken}`,
-            },
-            credentials: 'include',
-        });
-
-        if (!response.ok) {
-            throw new Error('Refresh token request failed');
-        }
-
-        const data = await response.json();
-        
-        if (!data.success) {
-            return null;
-        }
-
-        return {
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken
-        };
-    } catch (error) {
-        console.error('Token refresh failed in middleware:', error);
-        return null;
-    }
-}
-
 export async function middleware(request) {
     const { pathname } = request.nextUrl;
     
@@ -68,60 +37,52 @@ export async function middleware(request) {
         return NextResponse.next();
     }
     
+    // Get tokens from cookies
     const accessToken = request.cookies.get('accessToken')?.value;
     const refreshToken = request.cookies.get('refreshToken')?.value;
     
-    let shouldRefresh = false;
-    let decoded;
-
-    if (accessToken) {
+    // If no access token but has refresh token, try to refresh
+    if (!accessToken && refreshToken) {
         try {
-            decoded = jwtDecode(accessToken);
-            const currentTime = Math.floor(Date.now() / 1000);
-            // Check if token will expire in the next minute
-            shouldRefresh = decoded.exp - currentTime <= 60;
-        } catch (error) {
-            shouldRefresh = true;
-        }
-    }
-
-    // If no access token or token needs refresh, and we have refresh token
-    if ((!accessToken || shouldRefresh) && refreshToken) {
-        const tokens = await refreshAccessTokenInMiddleware(refreshToken);
-        
-        if (tokens) {
-            const response = NextResponse.next();
-            
-            // Set the new access token
-            response.cookies.set({
-                name: 'accessToken',
-                value: tokens.accessToken,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 60 * 15, // 15 minutes
-                path: '/'
+            // Try to refresh the token
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/refresh-token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cookie': `refreshToken=${refreshToken}`,
+                },
+                credentials: 'include',
             });
 
-            // Update refresh token if provided
-            if (tokens.refreshToken) {
-                response.cookies.set({
-                    name: 'refreshToken',
-                    value: tokens.refreshToken,
-                    httpOnly: true,
+            const data = await response.json();
+            
+            if (data.success) {
+                // Create response and set the new access token
+                const res = NextResponse.next();
+                
+                // Set the new access token as a regular cookie (not httpOnly)
+                res.cookies.set({
+                    name: 'accessToken',
+                    value: data.accessToken,
                     secure: process.env.NODE_ENV === 'production',
                     sameSite: 'lax',
-                    maxAge: 7 * 24 * 60 * 60, // 7 days
+                    maxAge: 60 * 15, // 15 minutes in seconds
                     path: '/'
                 });
+                
+                return res;
             }
-
-            return response;
+            
+            // If refresh failed, redirect to login
+            const url = new URL('/auth/sign-in', request.url);
+            url.searchParams.set('redirect', pathname);
+            return NextResponse.redirect(url);
+        } catch (error) {
+            // If refresh fails, redirect to login
+            const url = new URL('/auth/sign-in', request.url);
+            url.searchParams.set('redirect', pathname);
+            return NextResponse.redirect(url);
         }
-
-        // If refresh failed, redirect to login
-        const url = new URL('/auth/sign-in', request.url);
-        url.searchParams.set('redirect', pathname);
-        return NextResponse.redirect(url);
     }
     
     // If no tokens at all, redirect to login

@@ -251,14 +251,11 @@ const refreshTokenController = async (req, res) => {
             return res.status(401).json({ success: false, message: 'User not found' });
         }
 
-        // Generate new tokens
         const newAccessToken = generateAccessToken(user._id, user.role);
-        const newRefreshToken = generateRefreshTokenAndSetCookie(res, user._id, user.role);
 
         return res.status(200).json({
             success: true,
             accessToken: newAccessToken,
-            refreshToken: newRefreshToken,
             user: {
                 _id: user._id,
                 role: user.role,
@@ -266,7 +263,6 @@ const refreshTokenController = async (req, res) => {
         });
     } catch (error) {
         console.error('Refresh token error:', error);
-        clearRefreshTokenCookie(res);
         return res.status(401).json({ success: false, message: 'Invalid refresh token' });
     }
 };
@@ -278,9 +274,11 @@ const resendVerification = async (req, res) => {
     try {
         let user;
 
+        // Find user by email or by existing verification token
         if (email) {
             user = await User.findOne({ email, isVerified: false });
         } else if (verificationToken) {
+            // Decode the verification token to get user info, or find by existing token
             user = await User.findOne({
                 $or: [
                     { verificationToken: verificationToken },
@@ -297,6 +295,7 @@ const resendVerification = async (req, res) => {
             });
         }
 
+        // Check if too many requests (optional rate limiting)
         const now = Date.now();
         const lastResent = user.lastVerificationResent || 0;
         const timeDiff = now - lastResent;
@@ -309,14 +308,17 @@ const resendVerification = async (req, res) => {
             });
         }
 
+        // Generate new verification token
         const newVerificationToken = Math.floor(100000 + Math.random() * 900000).toString();
 
+        // Update user with new token and expiration
         user.verificationToken = newVerificationToken;
         user.verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
         user.lastVerificationResent = now;
 
         await user.save();
 
+        // Send new verification email
         await sendVerificationEmail(user.email, newVerificationToken);
 
         return res.status(200).json({
@@ -416,9 +418,11 @@ const inviteUser = async (req, res) => {
             });
         }
 
+        // Generate a secure invitation token
         const invitationToken = crypto.randomBytes(32).toString('hex');
-        const invitationTokenExpiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; 
+        const invitationTokenExpiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days expiry
         
+        // Create new user with invitation token - WITHOUT name and password
         const newUser = new User({
             email, 
             role, 
@@ -427,8 +431,10 @@ const inviteUser = async (req, res) => {
             isVerified: false
         });
 
+        // Generate invitation URL
         const invitationURL = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/accept-invitation/${invitationToken}`;
-
+        
+        // Send invitation email with token
         await sendInvitationEmail(email, invitationURL);
         await newUser.save();
 
@@ -458,6 +464,7 @@ const acceptInvitation = async (req, res) => {
             });
         }
         
+        // Find user with this invitation token that hasn't expired
         const user = await User.findOne({
             invitationToken: token,
             invitationTokenExpiresAt: { $gt: Date.now() }
@@ -470,23 +477,26 @@ const acceptInvitation = async (req, res) => {
             });
         }
         
+        // Update user information
         const hashedPassword = await bcrypt.hash(password, 10);
         
         user.name = name;
         user.password = hashedPassword;
         user.isVerified = true;
+        // Role is already set during invitation and preserved here
         user.invitationToken = undefined;
         user.invitationTokenExpiresAt = undefined;
         
         await user.save();
         
+        // Send welcome email
         await sendWelcomeEmail(user.email, user.name);
         
         return res.status(200).json({
             success: true,
             message: 'Account setup successful. You can now log in.',
             email: user.email,
-            role: user.role 
+            role: user.role // Include role in response
         });
         
     } catch (error) {
@@ -510,6 +520,7 @@ const validateInvitation = async (req, res) => {
       });
     }
     
+    // Find user with this invitation token that hasn't expired
     const user = await User.findOne({
       invitationToken: token,
       invitationTokenExpiresAt: { $gt: Date.now() }
@@ -600,6 +611,7 @@ const updatePassword = async (req, res) => {
             });
         }
 
+        // Get user with password
         const user = await User.findById(userId).select('+password');
         if (!user) {
             return res.status(404).json({ 
@@ -608,6 +620,7 @@ const updatePassword = async (req, res) => {
             });
         }
 
+        // Verify current password
         const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
         if (!isCurrentPasswordValid) {
             return res.status(400).json({ 
@@ -616,8 +629,10 @@ const updatePassword = async (req, res) => {
             });
         }
 
+        // Hash new password
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
+        // Update password
         user.password = hashedNewPassword;
         await user.save();
 
@@ -639,6 +654,7 @@ const updateApiKeys = async (req, res) => {
         const { apiKeys } = req.body;
         const userId = req.user._id;
 
+        // Only allow admin users to update API keys
         if (req.user.role !== 'admin') {
             return res.status(403).json({ 
                 success: false, 
@@ -653,8 +669,10 @@ const updateApiKeys = async (req, res) => {
             });
         }
 
+        // Validate API key formats (updated to handle object structure)
         const validatedKeys = {};
         
+        // Handle OpenAI API key
         if (apiKeys.openai && apiKeys.openai.key && apiKeys.openai.key.trim()) {
             if (!apiKeys.openai.key.startsWith('sk-')) {
                 return res.status(400).json({ 
@@ -670,6 +688,7 @@ const updateApiKeys = async (req, res) => {
             };
         }
 
+        // Handle Anthropic/Claude API key
         if (apiKeys.claude && apiKeys.claude.key && apiKeys.claude.key.trim()) {
             if (!apiKeys.claude.key.startsWith('sk-ant-')) {
                 return res.status(400).json({ 
@@ -685,6 +704,7 @@ const updateApiKeys = async (req, res) => {
             };
         }
 
+        // Handle Google Gemini API key
         if (apiKeys.gemini && apiKeys.gemini.key && apiKeys.gemini.key.trim()) {
             validatedKeys.gemini = {
                 key: apiKeys.gemini.key.trim(),
@@ -694,6 +714,7 @@ const updateApiKeys = async (req, res) => {
             };
         }
 
+        // Handle Llama API key
         if (apiKeys.llama && apiKeys.llama.key && apiKeys.llama.key.trim()) {
             validatedKeys.llama = {
                 key: apiKeys.llama.key.trim(),
@@ -703,6 +724,7 @@ const updateApiKeys = async (req, res) => {
             };
         }
 
+        // Handle OpenRouter API key
         if (apiKeys.openrouter && apiKeys.openrouter.key && apiKeys.openrouter.key.trim()) {
             if (!apiKeys.openrouter.key.startsWith('sk-or-')) {
                 return res.status(400).json({ 
@@ -718,6 +740,7 @@ const updateApiKeys = async (req, res) => {
             };
         }
 
+        // Handle Tavily Search API key
         if (apiKeys.tavily && apiKeys.tavily.key && apiKeys.tavily.key.trim()) {
             if (!apiKeys.tavily.key.startsWith('tvly-')) {
                 return res.status(400).json({ 
@@ -760,27 +783,6 @@ const updateApiKeys = async (req, res) => {
     }
 };
 
-const handleGoogleCallback = async (req, res) => {
-    try {
-        if (!req.user) {
-            return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Google authentication failed`);
-        }
-
-        const accessToken = generateAccessToken(req.user._id, req.user.role);
-        const refreshToken = generateRefreshTokenAndSetCookie(res, req.user._id, req.user.role);
-
-        // Redirect to frontend with tokens
-        const redirectUrl = new URL(`${process.env.FRONTEND_URL}/auth/google/callback`);
-        redirectUrl.searchParams.set('accessToken', accessToken);
-        redirectUrl.searchParams.set('refreshToken', refreshToken);
-        
-        return res.redirect(redirectUrl.toString());
-    } catch (error) {
-        console.error('Google callback error:', error);
-        return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Server error`);
-    }
-};
-
 module.exports = {
     SignUp,
     verifyEmail,
@@ -798,6 +800,5 @@ module.exports = {
     deleteUser,
     inviteUser,
     acceptInvitation,
-    validateInvitation,
-    handleGoogleCallback
+    validateInvitation
 };

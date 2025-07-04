@@ -78,62 +78,18 @@ export const getUser = () => {
     }
 };
 
-const REFRESH_TOKEN_THRESHOLD = 60 * 1000; // 1 minute before expiry
-
-export const setupTokenRefresh = () => {
-    // Check token expiration periodically
-    const checkTokenExpiration = async () => {
-        const accessToken = getAccessToken();
-        if (!accessToken) return;
-
-        try {
-            const decoded = jwtDecode(accessToken);
-            const expirationTime = decoded.exp * 1000; // Convert to milliseconds
-            const currentTime = Date.now();
-            const timeUntilExpiry = expirationTime - currentTime;
-
-            // If token is about to expire within the threshold, refresh it
-            if (timeUntilExpiry <= REFRESH_TOKEN_THRESHOLD) {
-                const success = await refreshAccessToken();
-                if (!success) {
-                    // If refresh fails, redirect to login
-                    removeTokens();
-                    window.location.href = '/auth/sign-in';
-                }
-            }
-        } catch (error) {
-            console.error('Token refresh check failed:', error);
-            removeTokens();
-            window.location.href = '/auth/sign-in';
-        }
-    };
-
-    // Check every 30 seconds
-    const intervalId = setInterval(checkTokenExpiration, 30000);
-    
-    // Initial check
-    checkTokenExpiration();
-
-    // Cleanup on unmount
-    return () => clearInterval(intervalId);
-};
-
 export const refreshAccessToken = async () => {
     try {
         const refreshToken = getRefreshToken();
         if (!refreshToken) return false;
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh-token`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/refresh-token`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             credentials: 'include',
         });
-
-        if (!response.ok) {
-            throw new Error('Refresh token request failed');
-        }
 
         const data = await response.json();
         
@@ -142,7 +98,7 @@ export const refreshAccessToken = async () => {
             return false;
         }
 
-        setTokens(data.accessToken, data.refreshToken); // Update both tokens if provided
+        setTokens(data.accessToken, null); // Only update access token
         return true;
     } catch (error) {
         console.error('Token refresh failed:', error);
@@ -165,17 +121,4 @@ export const getRedirectPath = (role) => {
 export const ROLES = {
     ADMIN: 'admin',
     USER: 'user',
-};
-
-export const initiateGoogleLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
-};
-
-export const handleGoogleCallback = async (accessToken, refreshToken) => {
-    if (accessToken && refreshToken) {
-        setTokens(accessToken, refreshToken);
-        const role = getUserRole();
-        return getRedirectPath(role);
-    }
-    return '/auth/sign-in?error=Authentication failed';
 }; 
