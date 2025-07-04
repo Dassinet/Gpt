@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { authenticatedAxios, isAuthenticated, getUser, getUserRole } from '@/lib/auth';
+import { isAuthenticated, getUser, getUserRole, getAccessToken } from '@/lib/auth';
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Plus, Bot, Clock, UserPlus, BarChart3, Settings, TrendingUp, Activity, Users } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import axios from "axios";
 
 const AdminDashboard = () => {
     const router = useRouter();
@@ -68,7 +69,11 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setIsRefreshing(true);
-            const gptsResponse = await authenticatedAxios.get('/api/gpt/all');
+            const gptsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`, {
+              headers: {
+                'Authorization': `Bearer ${getAccessToken()}`
+              }
+            });
             
             if (gptsResponse.data.success) {
                 const gptsData = gptsResponse.data.customGpts;

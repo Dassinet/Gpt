@@ -7,7 +7,8 @@ import { Bot, MessageSquare, User, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getUser, getAccessToken, isAuthenticated, authenticatedAxios } from '@/lib/auth';
+import { getUser, isAuthenticated, getAccessToken } from '@/lib/auth';
+import axios from 'axios';
 
 const UserDashboard = () => {
   const router = useRouter();
@@ -39,8 +40,13 @@ const UserDashboard = () => {
         setLoading(true);
         const userId = user.userId;
         
-        const assignedGptsResponse = await authenticatedAxios.get(
-          `/api/gpt/assigned/${userId}`
+        const assignedGptsResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${userId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${getAccessToken()}`
+            }
+          }
         );
         
         if (assignedGptsResponse.data.success) {
