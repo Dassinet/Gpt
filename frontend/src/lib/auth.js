@@ -7,24 +7,25 @@ export const AUTH_TOKENS = {
 };
 
 export const setTokens = (accessToken, refreshToken) => {
-    const cookieOptions = {
-        secure: true, // Always use secure in production
-        sameSite: 'none', // Required for cross-domain
-        domain: process.env.NEXT_PUBLIC_API_URL || undefined, // Add your domain
-        path: '/',
-    };
-
+    console.log('Setting tokens:', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
+    
     if (accessToken) {
         Cookies.set(AUTH_TOKENS.accessToken, accessToken, {
-            ...cookieOptions,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
             expires: 15/1440, // 15 minutes
+            path: '/',
         });
+        console.log('Access token set, checking if readable:', !!Cookies.get(AUTH_TOKENS.accessToken));
     }
     if (refreshToken) {
         Cookies.set(AUTH_TOKENS.refreshToken, refreshToken, {
-            ...cookieOptions,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
             expires: 7, // 7 days
+            path: '/',
         });
+        console.log('Refresh token set, checking if readable:', !!Cookies.get(AUTH_TOKENS.refreshToken));
     }
 };
 
@@ -62,12 +63,15 @@ export const isAuthenticated = () => {
 
 export const getUserRole = () => {
     const token = getAccessToken();
+    console.log('Getting user role, token exists:', !!token);
     if (!token) return null;
 
     try {
         const decoded = jwtDecode(token);
+        console.log('Decoded token:', decoded);
         return decoded.role || 'user';
-    } catch {
+    } catch (error) {
+        console.error('Error decoding token:', error);
         return null;
     }
 };
@@ -184,6 +188,10 @@ export const handleGoogleCallback = async (accessToken, refreshToken) => {
 
     if (accessToken && refreshToken) {
         setTokens(accessToken, refreshToken);
+        
+        // Add a small delay to ensure cookies are set
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const role = getUserRole();
         console.log('User role after setting tokens:', role);
         const redirectPath = getRedirectPath(role);
