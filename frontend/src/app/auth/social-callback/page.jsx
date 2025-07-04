@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { setToken, getRedirectPath } from '@/lib/auth';
 import { jwtDecode } from 'jwt-decode';
 import { toast } from 'sonner';
 
-export default function SocialCallback() {
+function SocialCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -31,8 +31,8 @@ export default function SocialCallback() {
         router.push('/auth/sign-in');
       }
     } else {
-        toast.error('No token found. Please try logging in again.');
-        router.push('/auth/sign-in');
+      toast.error('No token found. Please try logging in again.');
+      router.push('/auth/sign-in');
     }
   }, [router, searchParams]);
 
@@ -40,5 +40,17 @@ export default function SocialCallback() {
     <div className="flex h-screen items-center justify-center">
       <p>Please wait, we are signing you in...</p>
     </div>
+  );
+}
+
+export default function SocialCallback() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    }>
+      <SocialCallbackContent />
+    </Suspense>
   );
 } 

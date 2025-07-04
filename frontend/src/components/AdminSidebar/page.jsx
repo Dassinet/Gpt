@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Button } from "../ui/button"
 import { useState } from "react";
-import { removeTokens, getToken } from "@/lib/auth";
+import { removeToken, getToken } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axios from "axios";
@@ -68,7 +68,7 @@ export default function AdminSidebar() {
       });
 
       if (response.data.success) {
-        removeTokens();
+        removeToken();
         toast.success('Logged out successfully');
         router.push('/auth/sign-in');
       } else {
@@ -79,7 +79,7 @@ export default function AdminSidebar() {
       
       // Even if server logout fails, clear local tokens and redirect
       // This prevents the user from being stuck if the server is unreachable
-      removeTokens();
+      removeToken();
       
       if (error.response?.status === 401) {
         // Token already invalid, just redirect

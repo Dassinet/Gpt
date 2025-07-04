@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Button } from "../ui/button"
 import { useState } from "react"
-import { removeTokens, getToken } from "@/lib/auth"
+import { removeToken, getToken } from "@/lib/auth"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import axios from "axios"
@@ -61,7 +61,7 @@ export default function UserSidebar() {
       });
 
       if (response.data.success) {
-        removeTokens();
+        removeToken();
         toast.success('Logged out successfully');
         router.push('/auth/sign-in');
       } else {
@@ -69,7 +69,7 @@ export default function UserSidebar() {
       }
     } catch (error) {
       console.error('Logout error:', error);
-      removeTokens();
+      removeToken();
       router.push('/auth/sign-in');
     } finally {
       setIsLoggingOut(false);

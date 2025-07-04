@@ -1,5 +1,5 @@
 // ragApi.js - Client for communicating with Python RAG API
-import { getUser, getAccessToken } from './auth';
+import { getUser, getToken } from './auth';
 
 const RAG_API_BASE_URL = process.env.NEXT_PUBLIC_RAG_API_URL || 'http://localhost:8000';
 
@@ -120,7 +120,7 @@ class RAGApiClient {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`
         },
         body: JSON.stringify(payload)
       });
@@ -169,7 +169,7 @@ class RAGApiClient {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`
         },
         body: JSON.stringify(payload)
       });
@@ -242,7 +242,7 @@ class RAGApiClient {
       const response = await this.makeRequest(`${this.baseURL}/upload-chat-files`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`
         },
         body: formData
       });
@@ -282,7 +282,7 @@ class RAGApiClient {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAccessToken()}`
+          'Authorization': `Bearer ${getToken()}`
         },
         body: JSON.stringify(payload)
       });
