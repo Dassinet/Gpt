@@ -1,7 +1,7 @@
 // ragApi.js - Client for communicating with Python RAG API
 import { getUser, getAccessToken } from './auth';
 
-const RAG_API_BASE_URL = process.env.NEXT_PUBLIC_RAG_API_URL || 'http://localhost:8000';
+const RAG_API_BASE_URL = process.env.NEXT_PUBLIC_RAG_API_URL || 'https://gpt-python-bhuv.onrender.com';
 
 class RAGApiClient {
   constructor() {
