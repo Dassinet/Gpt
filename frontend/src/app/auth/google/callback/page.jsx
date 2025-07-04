@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { handleGoogleCallback } from "@/lib/auth";
 
-export default function GoogleCallback() {
+// Separate the component that uses useSearchParams
+function CallbackHandler() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -21,11 +22,25 @@ export default function GoogleCallback() {
     }, [router, searchParams]);
 
     return (
+        <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Completing sign in...</h2>
+            <p className="text-muted-foreground">Please wait while we redirect you.</p>
+        </div>
+    );
+}
+
+// Main page component with Suspense boundary
+export default function GoogleCallback() {
+    return (
         <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-                <h2 className="text-xl font-semibold mb-2">Completing sign in...</h2>
-                <p className="text-muted-foreground">Please wait while we redirect you.</p>
-            </div>
+            <Suspense fallback={
+                <div className="text-center">
+                    <h2 className="text-xl font-semibold mb-2">Loading...</h2>
+                    <p className="text-muted-foreground">Please wait...</p>
+                </div>
+            }>
+                <CallbackHandler />
+            </Suspense>
         </div>
     );
 } 
