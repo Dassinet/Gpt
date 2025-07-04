@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Calendar, Search, Trash2, Bot, User } from "lucide-react";
-  import { getAccessToken, isAuthenticated } from "@/lib/auth";
+import { getAccessToken, isAuthenticated } from "@/lib/auth";
 import { toast } from "sonner";
 import axios from 'axios';
 

@@ -1,7 +1,7 @@
 // ragApi.js - Client for communicating with Python RAG API
 import { getUser, getAccessToken } from './auth';
 
-const RAG_API_BASE_URL = process.env.NEXT_PUBLIC_RAG_API_URL || 'https://gpt-python-bhuv.onrender.com';
+const RAG_API_BASE_URL = process.env.NEXT_PUBLIC_RAG_API_URL || 'http://localhost:8000';
 
 class RAGApiClient {
   constructor() {
@@ -55,20 +55,15 @@ class RAGApiClient {
   }
 
   // Check if RAG service is available
-  async checkServiceHealth(timeout = 5000) {
+  async checkServiceHealth() {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-      
       const response = await fetch(`${this.baseURL}/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: controller.signal
+        timeout: 5000
       });
-      
-      clearTimeout(timeoutId);
       return response.ok;
     } catch (error) {
       console.error('RAG service health check failed:', error);
@@ -77,12 +72,12 @@ class RAGApiClient {
   }
 
   // Initialize GPT context with the Python API
-  async initializeGPTContext(user, gptData, options = {}) {
+  async initializeGPTContext(user, gptData) {
     try {
       const userData = this.getUserData();
       
-      // Check service health with configurable timeout
-      const isHealthy = await this.checkServiceHealth(options.healthCheckTimeout || 5000);
+      // Check service health first
+      const isHealthy = await this.checkServiceHealth();
       if (!isHealthy) {
         console.warn('RAG service is not healthy, skipping initialization');
         return false;
@@ -104,7 +99,7 @@ class RAGApiClient {
         file_urls: gptData.knowledgeFiles?.map(file => file.fileUrl) || [],
         use_hybrid_search: true,
         config_schema: {
-          model: gptData.model || "gpt-4",
+          model: gptData.model || "gpt-4o",
           instructions: gptData.instructions || "",
           mcpEnabled: mcpEnabled,
           mcpSchema: mcpSchema
@@ -112,9 +107,14 @@ class RAGApiClient {
         api_keys: this.getApiKeys()
       };
 
-      // Create AbortController for the initialization request
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), options.initTimeout || 15000);
+      console.log("Sending GPT context initialization payload:", JSON.stringify({
+        ...payload,
+        file_urls: `[${payload.file_urls.length} files]`, // Truncate for logs
+        config_schema: {
+          ...payload.config_schema,
+          instructions: payload.config_schema.instructions.substring(0, 50) + "..." // Truncate for logs
+        }
+      }));
 
       const response = await this.makeRequest(`${this.baseURL}/gpt-opened`, {
         method: 'POST',
@@ -122,19 +122,13 @@ class RAGApiClient {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${getAccessToken()}`
         },
-        body: JSON.stringify(payload),
-        signal: controller.signal
+        body: JSON.stringify(payload)
       });
 
-      clearTimeout(timeoutId);
       const result = await response.json();
       console.log("GPT context initialized successfully:", result);
       return true;
     } catch (error) {
-      if (error.name === 'AbortError') {
-        console.error('RAG initialization timed out');
-        throw new Error('RAG initialization timed out');
-      }
       console.error('Error initializing GPT context:', error);
       return false;
     }

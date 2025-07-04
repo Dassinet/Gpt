@@ -7,27 +7,19 @@ export const AUTH_TOKENS = {
 };
 
 export const setTokens = (accessToken, refreshToken) => {
-    console.log('Setting tokens:', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
-    
     if (accessToken) {
-        const accessTokenStr = String(accessToken);
-        Cookies.set(AUTH_TOKENS.accessToken, accessTokenStr, {
+        Cookies.set(AUTH_TOKENS.accessToken, accessToken, {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            expires: 15/1440, // 15 minutes
-            path: '/',
+            expires: 15/1440, // 15 minutes expressed as fraction of days
         });
-        console.log('Access token set, checking if readable:', !!Cookies.get(AUTH_TOKENS.accessToken));
     }
     if (refreshToken) {
-        const refreshTokenStr = String(refreshToken);
-        Cookies.set(AUTH_TOKENS.refreshToken, refreshTokenStr, {
+        Cookies.set(AUTH_TOKENS.refreshToken, refreshToken, {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             expires: 7, // 7 days
-            path: '/',
         });
-        console.log('Refresh token set, checking if readable:', !!Cookies.get(AUTH_TOKENS.refreshToken));
     }
 };
 
@@ -36,27 +28,8 @@ export const removeTokens = () => {
     Cookies.remove(AUTH_TOKENS.refreshToken);
 };
 
-export const getAccessToken = async () => {
-    const token = Cookies.get(AUTH_TOKENS.accessToken);
-    if (!token) return null;
-
-    try {
-        const decoded = jwtDecode(token);
-        const isExpired = decoded.exp < Date.now() / 1000;
-        
-        if (isExpired) {
-            // Try to refresh the token
-            const refreshed = await refreshAccessToken();
-            if (refreshed) {
-                return Cookies.get(AUTH_TOKENS.accessToken);
-            }
-            return null;
-        }
-        
-        return token;
-    } catch {
-        return null;
-    }
+export const getAccessToken = () => {
+    return Cookies.get(AUTH_TOKENS.accessToken);
 };
 
 export const getRefreshToken = () => {
@@ -72,6 +45,7 @@ export const isAuthenticated = () => {
         const isExpired = decoded.exp < Date.now() / 1000;
         
         if (isExpired) {
+            // Token is expired, try to refresh it
             return false;
         }
         
@@ -82,18 +56,13 @@ export const isAuthenticated = () => {
 };
 
 export const getUserRole = () => {
-    try {
-        const token = Cookies.get(AUTH_TOKENS.accessToken);
-        console.log('Getting user role, token exists:', !!token);
-        if (!token) return null;
+    const token = getAccessToken();
+    if (!token) return null;
 
-        // Ensure token is a string
-        const tokenStr = String(token);
-        const decoded = jwtDecode(tokenStr);
-        console.log('Decoded token:', decoded);
-        return decoded.role || null;
-    } catch (error) {
-        console.error('Error decoding token:', error);
+    try {
+        const decoded = jwtDecode(token);
+        return decoded.role || 'user';
+    } catch {
         return null;
     }
 };
@@ -159,7 +128,7 @@ export const refreshAccessToken = async () => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            credentials: 'include', // Important for cookies
+            credentials: 'include',
         });
 
         if (!response.ok) {
@@ -173,7 +142,7 @@ export const refreshAccessToken = async () => {
             return false;
         }
 
-        // The backend should set the cookies automatically
+        setTokens(data.accessToken, data.refreshToken); // Update both tokens if provided
         return true;
     } catch (error) {
         console.error('Token refresh failed:', error);
@@ -203,45 +172,10 @@ export const initiateGoogleLogin = () => {
 };
 
 export const handleGoogleCallback = async (accessToken, refreshToken) => {
-    console.log('Handling Google callback with tokens:', { 
-        hasAccessToken: !!accessToken, 
-        hasRefreshToken: !!refreshToken 
-    });
-
-    if (!accessToken || !refreshToken) {
-        console.error('Missing tokens in callback');
-        return '/auth/sign-in?error=Authentication failed';
+    if (accessToken && refreshToken) {
+        setTokens(accessToken, refreshToken);
+        const role = getUserRole();
+        return getRedirectPath(role);
     }
-
-    try {
-        // Ensure tokens are strings
-        const accessTokenStr = String(accessToken);
-        const refreshTokenStr = String(refreshToken);
-        
-        // Set the tokens
-        setTokens(accessTokenStr, refreshTokenStr);
-        
-        // Add a small delay to ensure cookies are set
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Verify the token is valid before getting the role
-        try {
-            const decoded = jwtDecode(accessTokenStr);
-            if (!decoded || !decoded.role) {
-                throw new Error('Invalid token structure');
-            }
-            console.log('Decoded token:', decoded);
-            const role = decoded.role;
-            console.log('User role after setting tokens:', role);
-            const redirectPath = getRedirectPath(role);
-            console.log('Redirecting to:', redirectPath);
-            return redirectPath;
-        } catch (decodeError) {
-            console.error('Error decoding token:', decodeError);
-            return '/auth/sign-in?error=Invalid token';
-        }
-    } catch (error) {
-        console.error('Error in handleGoogleCallback:', error);
-        return '/auth/sign-in?error=Authentication failed';
-    }
+    return '/auth/sign-in?error=Authentication failed';
 }; 

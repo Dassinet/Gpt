@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import axios from 'axios';  
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,8 +17,7 @@ import KnowledgeFileUploader from './components/KnowledgeFileUploader';
 import ImageUploader from './components/ImageUploader';
 import CapabilitiesSelector from './components/CapabilitiesSelector';
 import MarkdownPreview from './components/MarkdownPreview';
-import { getAccessToken, getUser } from '@/lib/auth'; 
-import axios from 'axios';
+import { getAccessToken, getUser } from '@/lib/auth';
 
 // Loading component for Suspense
 function LoadingState() {

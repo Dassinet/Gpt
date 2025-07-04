@@ -7,7 +7,7 @@ import { Bot, MessageSquare, User, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getUser, isAuthenticated, getAccessToken } from '@/lib/auth';
+import { getUser, getAccessToken, isAuthenticated } from '@/lib/auth';
 import axios from 'axios';
 
 const UserDashboard = () => {
@@ -31,6 +31,26 @@ const UserDashboard = () => {
     checkAuth();
   }, []);
 
+  // Configure axios
+  useEffect(() => {
+    axios.defaults.withCredentials = true;
+    
+    const requestInterceptor = axios.interceptors.request.use(
+      (config) => {
+        const token = getAccessToken();
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+    };
+  }, []);
+
   // Fetch assigned GPTs
   useEffect(() => {
     const fetchData = async () => {
@@ -38,23 +58,29 @@ const UserDashboard = () => {
       
       try {
         setLoading(true);
+        
+        // Use the userId from the decoded token
         const userId = user.userId;
         
+        console.log("Requesting GPTs for user ID:", userId);
+        
+        // Fetch GPTs assigned to this user
         const assignedGptsResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${userId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${getAccessToken()}`
-            }
-          }
+          `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${userId}`
         );
         
         if (assignedGptsResponse.data.success) {
+          console.log("GPTs received:", assignedGptsResponse.data.assignedGpts);
           setAssignedGpts(assignedGptsResponse.data.assignedGpts || []);
         }
       } catch (error) {
         console.error('Error fetching assigned GPTs:', error);
-        toast.error('Failed to fetch assigned GPTs');
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please login again.');
+          // Redirect to login or refresh token
+        } else {
+          toast.error('Failed to fetch assigned GPTs');
+        }
       } finally {
         setLoading(false);
       }

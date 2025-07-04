@@ -85,13 +85,6 @@ function ChatPageContent() {
     [searchParams]
   );
   
-  // Add these configurations at the top of your component or in a config file
-  const RAG_CONFIG = {
-    healthCheckTimeout: 5000,  // 5 seconds for health check
-    initTimeout: 15000,       // 15 seconds for initialization
-    maxRetries: 2            // Number of retries for initialization
-  };
-
   // Initialize user auth state
   useEffect(() => {
     const checkAuth = async () => {
@@ -152,39 +145,29 @@ function ChatPageContent() {
   }, [gptId, user?.userId]);
 
   // Initialize RAG context with better error handling
-  const initializeRAG = async () => {
-    let retries = 0;
-    
-    while (retries <= RAG_CONFIG.maxRetries) {
-      try {
-        const success = await ragApiClient.initializeGPTContext(gptData, {
-          healthCheckTimeout: RAG_CONFIG.healthCheckTimeout,
-          initTimeout: RAG_CONFIG.initTimeout
-        });
-        
-        if (success) {
-          console.log('RAG initialization successful');
-          return true;
-        }
-        
-        retries++;
-        if (retries <= RAG_CONFIG.maxRetries) {
-          console.log(`RAG initialization failed, retrying (${retries}/${RAG_CONFIG.maxRetries})...`);
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
-        }
-      } catch (error) {
-        console.error('RAG initialization error:', error);
-        retries++;
-        if (retries <= RAG_CONFIG.maxRetries) {
-          console.log(`Retrying RAG initialization (${retries}/${RAG_CONFIG.maxRetries})...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-      }
+  const initializeRAGContext = useCallback(async (gptData) => {
+    if (!user || !user.userId) {
+      console.warn("Cannot initialize RAG context: User data is missing or incomplete");
+      toast.warning("AI features may be limited. User authentication required.", { duration: 3000 });
+      return false;
     }
     
-    console.error('RAG initialization failed after all retries');
-    return false;
-  };
+    try {
+      console.log("Initializing RAG context for GPT:", gptData.name);
+      
+      const response = await ragApiClient.initializeGPTContext(user, gptData);
+      
+      if (response) {
+        console.log("RAG context initialized successfully:", response);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error initializing RAG context:", error);
+      toast.warning("AI features may be limited. RAG service is unavailable.", { duration: 3000 });
+      return false;
+    }
+  }, [user]);
 
   // Load conversation history with timeout
   const loadConversationHistory = useCallback(async (convId) => {
@@ -269,7 +252,7 @@ function ChatPageContent() {
 
       // 3. Initialize RAG context (non-blocking, with timeout)
       const ragPromise = Promise.race([
-        initializeRAG(),
+        initializeRAGContext(gptResult),
         new Promise((resolve) => 
           setTimeout(() => {
             console.warn("RAG initialization timeout, continuing without RAG");
@@ -308,7 +291,7 @@ function ChatPageContent() {
       setIsLoading(false);
       initializationRef.current = false;
     }
-  }, [user, gptId, conversationIdFromUrl, fetchGptData, loadConversationHistory, initializeRAG]);
+  }, [user, gptId, conversationIdFromUrl, fetchGptData, loadConversationHistory, initializeRAGContext]);
 
   // Main initialization effect with proper dependencies
   useEffect(() => {

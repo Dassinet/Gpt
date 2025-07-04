@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAuthenticated, getUser, getUserRole, getAccessToken } from '@/lib/auth';
+import { getUser, getUserRole, getAccessToken, isAuthenticated } from '@/lib/auth';
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Plus, Bot, Clock, UserPlus, BarChart3, Settings, TrendingUp, Activity, Users } from "lucide-react";
 import Link from "next/link";
+import axios from "axios";
 import { toast } from "sonner";
-import api from '@/lib/api';
 
 const AdminDashboard = () => {
     const router = useRouter();
@@ -66,10 +66,30 @@ const AdminDashboard = () => {
         checkAuth();
     }, [router]);
 
+    // Configure axios
+    useEffect(() => {
+        axios.defaults.withCredentials = true;
+        
+        const requestInterceptor = axios.interceptors.request.use(
+            (config) => {
+                const token = getAccessToken();
+                if (token) {
+                    config.headers['Authorization'] = `Bearer ${token}`;
+                }
+                return config;
+            },
+            (error) => Promise.reject(error)
+        );
+
+        return () => {
+            axios.interceptors.request.eject(requestInterceptor);
+        };
+    }, []);
+
     const fetchDashboardData = async () => {
         try {
             setIsRefreshing(true);
-            const gptsResponse = await api.get('/api/gpt/all');
+            const gptsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`);
             
             if (gptsResponse.data.success) {
                 const gptsData = gptsResponse.data.customGpts;
@@ -100,12 +120,7 @@ const AdminDashboard = () => {
             }
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
-            if (error.response?.status === 401) {
-                toast.error('Session expired. Please sign in again.');
-                router.push('/auth/sign-in');
-            } else {
-                toast.error('Failed to fetch dashboard data');
-            }
+            toast.error('Failed to fetch dashboard data');
         } finally {
             setIsRefreshing(false);
         }

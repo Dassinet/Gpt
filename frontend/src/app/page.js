@@ -6,7 +6,7 @@ export default function Home() {
   const router = useRouter();
   return (
     <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-4xl font-bold">Welcome to EMSA </h1>
+      <h1 className="text-4xl font-bold">Hello World</h1>
       <Button onClick={() => router.push("/auth/sign-in")} className="mt-4" variant="outline">Get started</Button>
     </div>
   );

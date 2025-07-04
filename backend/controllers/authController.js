@@ -105,13 +105,6 @@ const signIn = async (req, res) => {
         const accessToken = generateAccessToken(user._id, user.role);
         const refreshToken = generateRefreshTokenAndSetCookie(res, user._id, user.role);
 
-        res.cookie('accessToken', accessToken, {
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 15 * 60 * 1000, // 15 minutes
-            path: '/',
-        });
-
         user.lastActive = new Date();
         await user.save();
 
@@ -258,22 +251,22 @@ const refreshTokenController = async (req, res) => {
             return res.status(401).json({ success: false, message: 'User not found' });
         }
 
+        // Generate new tokens
         const newAccessToken = generateAccessToken(user._id, user.role);
-
-        res.cookie('accessToken', newAccessToken, {
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 15 * 60 * 1000, // 15 minutes
-            path: '/',
-        });
+        const newRefreshToken = generateRefreshTokenAndSetCookie(res, user._id, user.role);
 
         return res.status(200).json({
             success: true,
-            message: 'Token refreshed successfully',
-            accessToken: newAccessToken
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+            user: {
+                _id: user._id,
+                role: user.role,
+            }
         });
     } catch (error) {
-        console.error('Error refreshing token:', error);
+        console.error('Refresh token error:', error);
+        clearRefreshTokenCookie(res);
         return res.status(401).json({ success: false, message: 'Invalid refresh token' });
     }
 };
@@ -770,22 +763,13 @@ const updateApiKeys = async (req, res) => {
 const handleGoogleCallback = async (req, res) => {
     try {
         if (!req.user) {
-            return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Authentication failed`);
+            return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Google authentication failed`);
         }
 
-        const user = req.user;
-        const accessToken = generateAccessToken(user._id, user.role);
-        const refreshToken = generateRefreshTokenAndSetCookie(res, user._id, user.role);
+        const accessToken = generateAccessToken(req.user._id, req.user.role);
+        const refreshToken = generateRefreshTokenAndSetCookie(res, req.user._id, req.user.role);
 
-        // Set cookies server-side
-        res.cookie('accessToken', accessToken, {
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 15 * 60 * 1000, // 15 minutes
-            path: '/',
-        });
-
-        // Redirect with tokens as URL parameters
+        // Redirect to frontend with tokens
         const redirectUrl = new URL(`${process.env.FRONTEND_URL}/auth/google/callback`);
         redirectUrl.searchParams.set('accessToken', accessToken);
         redirectUrl.searchParams.set('refreshToken', refreshToken);
@@ -793,7 +777,7 @@ const handleGoogleCallback = async (req, res) => {
         return res.redirect(redirectUrl.toString());
     } catch (error) {
         console.error('Google callback error:', error);
-        return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Authentication failed`);
+        return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Server error`);
     }
 };
 

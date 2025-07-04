@@ -1,47 +1,18 @@
 "use client";
 
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import UserSidebar from '@/components/UserSidebar/page';
 import { Toaster } from '@/components/ui/sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useEffect } from 'react';
-import { isAuthenticated, getUserRole } from '@/lib/auth';
-import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Menu } from 'lucide-react';
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const router = useRouter();
-
-  useEffect(() => {
-    const checkAuth = () => {
-      if (!isAuthenticated()) {
-        toast.error('Please login to access this page');
-        router.push('/auth/sign-in');
-        return;
-      }
-
-      const userRole = getUserRole();
-      const isAdminRoute = window.location.pathname.startsWith('/admin');
-      const isUserRoute = window.location.pathname.startsWith('/user');
-
-      if (isAdminRoute && userRole !== 'admin') {
-        toast.error('Access denied. Admin privileges required.');
-        router.push('/user/dashboard');
-        return;
-      }
-
-      if (isUserRoute && userRole !== 'user') {
-        router.push('/admin/dashboard');
-        return;
-      }
-    };
-
-    checkAuth();
-  }, [router]);
-
-    // Routes that should not have sidebar
+  
+  // Routes that should not have sidebar
   const noSidebarRoutes = ['/create-gpt', '/chat'];
   const shouldHideSidebar = noSidebarRoutes.some(route => pathname.includes(route));
 

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import axios from 'axios';
 import { 
   MoreHorizontal, 
   Edit, 
@@ -44,7 +43,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-import { getUser, getUserRole, isAuthenticated, getAccessToken } from '@/lib/auth';
+import { getUser, getUserRole, getAccessToken, isAuthenticated } from '@/lib/auth';
+import axios from 'axios';
 
 const AdminCollections = () => {
   const router = useRouter();

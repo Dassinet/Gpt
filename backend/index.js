@@ -16,24 +16,12 @@ const PORT = process.env.PORT || 3001;
 
 connectDB();
 
-const allowedOrigins = [
-    process.env.FRONTEND_URL || 'https://gpt-frontend-five.vercel.app',
-    'http://localhost:3000',
-    'https://emsa-beta.vercel.app'
-];
-
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: process.env.FRONTEND_URL || 'https://gpt-frontend-five.vercel.app',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-    exposedHeaders: ['Authorization', 'Set-Cookie'],
+    exposedHeaders: ['Authorization']
 }));
 
 app.use(express.json());
