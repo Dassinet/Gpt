@@ -767,14 +767,21 @@ const handleGoogleCallback = async (req, res) => {
             return res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in?error=Google authentication failed`);
         }
 
+        // Generate tokens
         const accessToken = generateAccessToken(req.user._id, req.user.role);
         const refreshToken = generateRefreshTokenAndSetCookie(res, req.user._id, req.user.role);
 
-        // Add some logging
+        // Log the token generation
         console.log('Generated tokens for user:', {
             userId: req.user._id,
             role: req.user.role,
-            redirectingTo: `${process.env.FRONTEND_URL}/auth/google/callback`
+            hasAccessToken: !!accessToken,
+            hasRefreshToken: !!refreshToken
+        });
+
+        // Update user's last active timestamp
+        await User.findByIdAndUpdate(req.user._id, {
+            lastActive: new Date()
         });
 
         // Construct redirect URL with tokens
@@ -782,6 +789,7 @@ const handleGoogleCallback = async (req, res) => {
         redirectUrl.searchParams.set('accessToken', accessToken);
         redirectUrl.searchParams.set('refreshToken', refreshToken);
         
+        console.log('Redirecting to:', redirectUrl.toString());
         return res.redirect(redirectUrl.toString());
     } catch (error) {
         console.error('Google callback error:', error);

@@ -67,10 +67,33 @@ export const initiateGoogleLogin = () => {
 };
 
 export const handleGoogleCallback = async (accessToken, refreshToken) => {
-    if (accessToken) {
-        const role = getUserRole();
+    console.log('Handling Google callback with tokens:', { 
+        hasAccessToken: !!accessToken, 
+        hasRefreshToken: !!refreshToken 
+    });
+
+    if (accessToken && refreshToken) {
+        // Set the tokens in cookies
+        Cookies.set(AUTH_TOKENS.accessToken, accessToken, {
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            expires: 15/1440, // 15 minutes
+            path: '/',
+        });
+        
+        // Wait a moment for cookies to be set
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Get user role from the token
+        const decoded = jwtDecode(accessToken);
+        const role = decoded.role || 'user';
+        
+        console.log('User role from token:', role);
         const redirectPath = getRedirectPath(role);
+        console.log('Redirecting to:', redirectPath);
         return redirectPath;
     }
+    
+    console.error('Missing tokens in callback');
     return '/auth/sign-in?error=Authentication failed';
 };

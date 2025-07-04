@@ -14,11 +14,19 @@ function CallbackHandler() {
             try {
                 const accessToken = searchParams.get("accessToken");
                 const refreshToken = searchParams.get("refreshToken");
+                const error = searchParams.get("error");
                 
                 console.log('Received callback with params:', { 
                     hasAccessToken: !!accessToken, 
-                    hasRefreshToken: !!refreshToken 
+                    hasRefreshToken: !!refreshToken,
+                    error: error
                 });
+
+                if (error) {
+                    console.error('Error from OAuth:', error);
+                    router.push(`/auth/sign-in?error=${encodeURIComponent(error)}`);
+                    return;
+                }
 
                 if (!accessToken || !refreshToken) {
                     console.error('Missing tokens in callback');
@@ -28,7 +36,11 @@ function CallbackHandler() {
 
                 const redirectPath = await handleGoogleCallback(accessToken, refreshToken);
                 console.log('Redirecting to:', redirectPath);
-                router.push(redirectPath);
+                
+                // Add a small delay before redirect to ensure cookies are set
+                setTimeout(() => {
+                    router.push(redirectPath);
+                }, 100);
             } catch (error) {
                 console.error('Error in Google callback:', error);
                 router.push('/auth/sign-in?error=' + encodeURIComponent(error.message));
