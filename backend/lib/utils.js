@@ -20,15 +20,17 @@ const generateRefreshTokenAndSetCookie = (res, userId, role) => {
         path: '/',
     });
 
+    const accessToken = generateAccessToken(userId, role);
+    
     // Set access token as regular cookie
-    res.cookie('accessToken', generateAccessToken(userId, role), {
+    res.cookie('accessToken', accessToken, {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 15 * 60 * 1000, // 15 minutes
         path: '/',
     });
 
-    return refreshToken;
+    return { refreshToken, accessToken };
 };
 
 const clearRefreshTokenCookie = (res) => {

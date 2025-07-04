@@ -151,17 +151,28 @@ export const createAuthenticatedAxios = () => {
 
                 try {
                     // Try to refresh the token
+                    const refreshToken = getRefreshToken();
+                    if (!refreshToken) {
+                        throw new Error('No refresh token available');
+                    }
+
                     const response = await axios.post(
                         `${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh-token`,
                         {},
-                        { withCredentials: true }
+                        { 
+                            withCredentials: true,
+                            headers: {
+                                'Authorization': `Bearer ${refreshToken}`
+                            }
+                        }
                     );
 
                     if (response.data.success) {
-                        setTokens(response.data.accessToken, response.data.refreshToken);
+                        const { accessToken, refreshToken } = response.data;
+                        setTokens(accessToken, refreshToken);
                         
-                        // Retry the original request with new token
-                        originalRequest.headers['Authorization'] = `Bearer ${response.data.accessToken}`;
+                        // Update the authorization header
+                        originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
                         return instance(originalRequest);
                     }
                 } catch (refreshError) {
