@@ -174,41 +174,41 @@ const InputMessages = ({
   return (
     <>
       <MarkdownStyles />
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 hide-scrollbar">
-        {/* Empty state */}
+      <div className="flex-1 overflow-y-auto px-2 sm:px-3 md:px-4 py-3 sm:py-4 space-y-4 sm:space-y-5 md:space-y-6 hide-scrollbar">
+        {/* Empty state - made responsive */}
         {messages?.length === 0 && !isSending && (
-          <div className="flex-1 flex items-center justify-center min-h-[400px]">
+          <div className="flex-1 flex items-center justify-center min-h-[300px] sm:min-h-[350px] md:min-h-[400px]">
             {!gptData ? (
-              <div className="text-center max-w-md">
-                <Skeleton className="w-16 h-16 mx-auto mb-4 rounded-full" />
-                <Skeleton className="h-6 w-48 mx-auto mb-2" />
-                <Skeleton className="h-4 w-64 mx-auto mb-4" />
-                <div className="flex flex-wrap gap-2 justify-center">
-                  <Skeleton className="h-8 w-24" />
-                  <Skeleton className="h-8 w-32" />
-                  <Skeleton className="h-8 w-28" />
+              <div className="text-center max-w-[280px] sm:max-w-[320px] md:max-w-md">
+                <Skeleton className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-3 sm:mb-4 rounded-full" />
+                <Skeleton className="h-5 sm:h-6 w-32 sm:w-40 md:w-48 mx-auto mb-2" />
+                <Skeleton className="h-3.5 sm:h-4 w-48 sm:w-56 md:w-64 mx-auto mb-3 sm:mb-4" />
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center">
+                  <Skeleton className="h-7 sm:h-8 w-20 sm:w-24" />
+                  <Skeleton className="h-7 sm:h-8 w-28 sm:w-32" />
+                  <Skeleton className="h-7 sm:h-8 w-24 sm:w-28" />
                 </div>
               </div>
             ) : (
-              <div className="text-center max-w-md">
-                <Avatar className="w-16 h-16 mx-auto mb-4">
+              <div className="text-center max-w-[280px] sm:max-w-[320px] md:max-w-md px-2 sm:px-0">
+                <Avatar className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-3 sm:mb-4">
                   <AvatarImage src={gptData.imageUrl} alt={gptData.name} />
-                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xl font-bold">
+                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-base sm:text-lg md:text-xl font-bold">
                     {gptData?.name?.charAt(0) || 'AI'}
                   </AvatarFallback>
                 </Avatar>
-                <h3 className="text-xl font-semibold mb-2 text-black dark:text-white">
+                <h3 className="text-lg sm:text-xl font-semibold mb-1.5 sm:mb-2 text-black dark:text-white">
                   Chat with {gptData?.name || 'AI Assistant'}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-4">
                   {gptData?.description || 'Start a conversation by typing a message below.'}
                 </p>
-                <div className="flex flex-wrap gap-2 justify-center">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onSendMessage("Hello! Can you help me understand what you can do?")}
-                    className="text-sm"
+                    className="text-xs sm:text-sm h-7 sm:h-8"
                   >
                     What can you do?
                   </Button>
@@ -216,7 +216,7 @@ const InputMessages = ({
                     variant="outline"
                     size="sm"
                     onClick={() => onSendMessage("Can you explain this topic in simple terms?")}
-                    className="text-sm"
+                    className="text-xs sm:text-sm h-7 sm:h-8"
                   >
                     Explain something
                   </Button>
@@ -226,29 +226,29 @@ const InputMessages = ({
           </div>
         )}
 
-        {/* Messages - Properly aligned with max-width container */}
-        <div className="w-full max-w-4xl mx-auto space-y-6">
+        {/* Messages - Responsive container with proper spacing */}
+        <div className="w-full max-w-3xl sm:max-w-3xl md:max-w-4xl mx-auto space-y-4 sm:space-y-5 md:space-y-6">
           {messages.map((message) => (
             <div 
               key={message.id} 
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {message.role === 'user' ? (
-                // USER MESSAGE - Right aligned with proper spacing
-                <div className="max-w-[70%] flex flex-col items-end">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                // USER MESSAGE - Responsive right alignment
+                <div className="max-w-[80%] sm:max-w-[75%] md:max-w-[70%] flex flex-col items-end">
+                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                    <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                       {message.timestamp instanceof Date ? 
                         message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) :
                         new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
                       }
                     </span>
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8">
                       <AvatarImage 
                         src={realUserData?.profilePic} 
                         alt={realUserData?.name || 'User'} 
                       />
-                      <AvatarFallback className="bg-purple-500 text-white">
+                      <AvatarFallback className="bg-purple-500 text-white text-xs sm:text-sm">
                         {isLoadingUser ? "..." : 
                           (realUserData?.name?.charAt(0)?.toUpperCase() || "U")
                         }
@@ -256,16 +256,16 @@ const InputMessages = ({
                     </Avatar>
                   </div>
                   
-                  <div className="bg-neutral-700 text-white rounded-2xl px-4 py-3 w-full">
-                    <div className="whitespace-pre-wrap break-words leading-relaxed">
+                  <div className="bg-neutral-700 text-white rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-3 w-full">
+                    <div className="whitespace-pre-wrap break-words leading-relaxed text-xs sm:text-sm md:text-base">
                       {message.content}
                     </div>
                     {message.files && message.files.length > 0 && (
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-2 sm:mt-3 space-y-1.5 sm:space-y-2">
                         {message.files.map((file, index) => (
                           <div 
                             key={index}
-                            className="flex items-center text-xs bg-neutral-700 rounded px-2 py-1"
+                            className="flex items-center text-[10px] sm:text-xs bg-neutral-700 rounded px-1.5 sm:px-2 py-0.5 sm:py-1"
                           >
                             {getFileIcon(file.name)}
                             <span className="truncate ml-1">{file.name}</span>
@@ -276,21 +276,21 @@ const InputMessages = ({
                   </div>
                 </div>
               ) : (
-                // AI MESSAGE - Left aligned with proper spacing
+                // AI MESSAGE - Responsive left alignment
                 <div className="w-full">
-                  <div className="flex items-start gap-3 mb-2">
-                    <Avatar className="h-8 w-8 shrink-0">
+                  <div className="flex items-start gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                    <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 shrink-0">
                       <AvatarImage src={gptData?.imageUrl} alt={gptData?.name || 'AI'} />
-                      <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium">
+                      <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs sm:text-sm">
                         {gptData?.name?.charAt(0) || 'AI'}
                       </AvatarFallback>
                     </Avatar>
                     
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                         {gptData?.name || 'AI Assistant'}
                       </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                         {message.timestamp instanceof Date ? 
                           message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) :
                           new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
@@ -299,9 +299,9 @@ const InputMessages = ({
                     </div>
                   </div>
                   
-                  {/* AI message content - NO CONTAINER/BACKGROUND */}
-                  <div className="ml-11 relative group">
-                    <div className="markdown-content text-black dark:text-white">
+                  {/* AI message content - Responsive spacing */}
+                  <div className="ml-8 sm:ml-10 md:ml-11 relative group">
+                    <div className="markdown-content text-black dark:text-white text-xs sm:text-sm md:text-base">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         rehypePlugins={[rehypeRaw]}
@@ -313,13 +313,13 @@ const InputMessages = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="absolute top-1 right-1 h-6 w-6 p-0 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-1 right-1 h-5 w-5 sm:h-6 sm:w-6 p-0 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => handleCopy(message.content, message.id)}
                       title="Copy message"
                     >
                       {copiedMessageId === message.id ? 
-                        <CopyCheck className="h-3 w-3 text-gray-700 dark:text-gray-300" /> : 
-                        <Copy className="h-3 w-3 text-gray-700 dark:text-gray-300" />
+                        <CopyCheck className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-700 dark:text-gray-300" /> : 
+                        <Copy className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-700 dark:text-gray-300" />
                       }
                     </Button>
                   </div>
@@ -328,31 +328,31 @@ const InputMessages = ({
             </div>
           ))}
 
-          {/* Streaming message - NO CONTAINER for AI */}
+          {/* Streaming message - Made responsive */}
           {streamingMessage && (
             <div className="flex justify-start">
               <div className="w-full">
-                <div className="flex items-start gap-3 mb-2">
-                  <Avatar className="h-8 w-8 shrink-0">
+                <div className="flex items-start gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                  <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 shrink-0">
                     <AvatarImage src={gptData?.imageUrl} alt={gptData?.name || 'AI'} />
-                    <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium">
+                    <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs sm:text-sm">
                       {gptData?.name?.charAt(0) || 'AI'}
                     </AvatarFallback>
                   </Avatar>
                   
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                       {gptData?.name || 'AI Assistant'}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                       {new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
                     </span>
                   </div>
                 </div>
                 
-                {/* Streaming content - NO CONTAINER */}
-                <div className="ml-11">
-                  <div className="markdown-content text-black dark:text-white">
+                {/* Streaming content - Responsive spacing */}
+                <div className="ml-8 sm:ml-10 md:ml-11">
+                  <div className="markdown-content text-black dark:text-white text-xs sm:text-sm md:text-base">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw]}
@@ -371,27 +371,27 @@ const InputMessages = ({
             </div>
           )}
 
-          {/* Loading state - NO CONTAINER for AI */}
+          {/* Loading state - Made responsive */}
           {isSending && !streamingMessage && (
             <div className="flex justify-start">
               <div className="w-full">
-                <div className="flex items-start gap-3 mb-2">
-                  <Avatar className="h-8 w-8 shrink-0">
+                <div className="flex items-start gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                  <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 shrink-0">
                     <AvatarImage src={gptData?.imageUrl} alt={gptData?.name || 'AI'} />
-                    <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium">
+                    <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs sm:text-sm">
                       {gptData?.name?.charAt(0) || 'AI'}
                     </AvatarFallback>
                   </Avatar>
                   
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                       {gptData?.name || 'AI Assistant'}
                     </span>
                   </div>
                 </div>
                 
-                {/* Loading animation - NO CONTAINER */}
-                <div className="ml-11">
+                {/* Loading animation - Responsive spacing */}
+                <div className="ml-8 sm:ml-10 md:ml-11">
                   <div className="typing-animation">
                     <span></span>
                     <span></span>

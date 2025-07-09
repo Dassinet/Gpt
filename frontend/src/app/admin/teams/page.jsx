@@ -26,6 +26,7 @@ import {
   Send,
   UserPlus,
   Save,
+  Loader2,
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -75,6 +76,8 @@ const Teams = () => {
     role: '',
     status: ''
   });
+
+  const [assignProgress, setAssignProgress] = useState(0);
 
   useEffect(() => {
     axios.defaults.withCredentials = true;
@@ -214,27 +217,58 @@ const Teams = () => {
 
   const handleAssignGPTs = async () => {
     if (!selectedMember || selectedGPTs.length === 0) {
-      toast.error('Please select GPTs to assign');
+      toast.error('Please select GPTs to assign or unassign');
       return;
     }
 
     try {
       setIsAssigning(true);
-      const promises = selectedGPTs.map(gptId => {
-        return axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assign/${gptId}`, {
-          user: { _id: selectedMember.id },
-          gpt: { _id: gptId }
-        }, {
-          headers: {
-            'Authorization': `Bearer ${getToken()}`,
-            'Content-Type': 'application/json'
-          },
-          timeout: 5000
-        });
+      
+      // Separate the GPTs to assign and unassign
+      const gptsToAssign = selectedGPTs.filter(id => !id.startsWith('unassign-'));
+      const gptsToUnassign = selectedGPTs
+        .filter(id => id.startsWith('unassign-'))
+        .map(id => id.replace('unassign-', ''));
+      
+      // Handle assignments
+      const assignPromises = gptsToAssign.map(async gptId => {
+        try {
+          await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assign/${gptId}`, {
+            user: { _id: selectedMember.id },
+            gpt: { _id: gptId }
+          }, {
+            headers: {
+              'Authorization': `Bearer ${getToken()}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 5000
+          });
+        } catch (error) {
+          console.error(`Error assigning GPT ${gptId}:`, error);
+          throw error;
+        }
       });
       
-      await Promise.all(promises);
+      // Handle unassignments
+      const unassignPromises = gptsToUnassign.map(async gptId => {
+        try {
+          await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/unassign/${gptId}`, {
+            data: { userId: selectedMember.id },
+            headers: {
+              'Authorization': `Bearer ${getToken()}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 5000
+          });
+        } catch (error) {
+          console.error(`Error unassigning GPT ${gptId}:`, error);
+          throw error;
+        }
+      });
       
+      await Promise.all([...assignPromises, ...unassignPromises]);
+      
+      // Update the member's assigned GPTs
       const gptResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${selectedMember.id}`
       , {
@@ -247,7 +281,14 @@ const Teams = () => {
       
       const assignedGpts = gptResponse.data.assignedGpts || [];
       
-      toast.success(`Successfully assigned ${selectedGPTs.length} GPTs to ${selectedMember.name}`);
+      const operationText = 
+        gptsToAssign.length > 0 && gptsToUnassign.length > 0 
+          ? 'assigned and unassigned' 
+          : gptsToAssign.length > 0 
+            ? 'assigned' 
+            : 'unassigned';
+            
+      toast.success(`Successfully ${operationText} GPTs for ${selectedMember.name}`);
       setIsAssignGPTOpen(false);
       setSelectedGPTs([]);
       
@@ -259,8 +300,8 @@ const Teams = () => {
         )
       );
     } catch (error) {
-      console.error('Error assigning GPTs:', error);
-      toast.error('Failed to assign GPTs');
+      console.error('Error managing GPT assignments:', error);
+      toast.error('Failed to update GPT assignments');
     } finally {
       setIsAssigning(false);
     }
@@ -743,14 +784,22 @@ const Teams = () => {
                     >
                       <Checkbox 
                         id={`gpt-${gpt._id}`} 
-                        checked={selectedGPTs.includes(gpt._id) || isAlreadyAssigned}
-                        disabled={isAlreadyAssigned}
+                        checked={isAlreadyAssigned ? !selectedGPTs.includes(`unassign-${gpt._id}`) : selectedGPTs.includes(gpt._id)}
                         onCheckedChange={(checked) => {
-                          if (isAlreadyAssigned) return;
-                          if (checked) {
-                            setSelectedGPTs(prev => [...prev, gpt._id]);
+                          if (isAlreadyAssigned) {
+                            if (checked) {
+                              // Remove from unassign list when checking
+                              setSelectedGPTs(prev => prev.filter(id => id !== `unassign-${gpt._id}`));
+                            } else {
+                              // Add to unassign list when unchecking
+                              setSelectedGPTs(prev => [...prev, `unassign-${gpt._id}`]);
+                            }
                           } else {
-                            setSelectedGPTs(prev => prev.filter(id => id !== gpt._id));
+                            if (checked) {
+                              setSelectedGPTs(prev => [...prev, gpt._id]);
+                            } else {
+                              setSelectedGPTs(prev => prev.filter(id => id !== gpt._id));
+                            }
                           }
                         }}
                       />
@@ -763,9 +812,9 @@ const Teams = () => {
                         }`}
                       >
                         {gpt.name}
-                        {isAlreadyAssigned && (
+                        {isAlreadyAssigned && !selectedGPTs.includes(`unassign-${gpt._id}`) && (
                           <span className="ml-2 text-xs text-purple-600 dark:text-purple-400">
-                            (Already assigned)
+                            (Click to unassign)
                           </span>
                         )}
                       </Label>
@@ -780,30 +829,23 @@ const Teams = () => {
             )}
           </div>
           <div className="flex flex-col sm:flex-row gap-2 px-4 pb-4 sm:px-6 sm:pb-6">
-            {isAssigning ? (
-              <Button className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700">
-                <Loader2 className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                Assigning...
+              <Button 
+                onClick={handleAssignGPTs}
+                disabled={!selectedGPTs.length || isAssigning}
+                className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm h-8 sm:h-9 flex items-center justify-center"
+              >
+                {isAssigning ? (
+                  <>
+                    <Loader2 className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                    Assigning...
+                  </>
+                ) : (
+                  <>
+                    <Bot className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                    Update GPT Access
+                  </>
+                )}
               </Button>
-            ) : (
-              <>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsAssignGPTOpen(false)}
-                  className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleAssignGPTs}
-                  disabled={!selectedGPTs.length}
-                  className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-xs sm:text-sm h-8 sm:h-9"
-                >
-                  <Bot className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  Assign Selected
-                </Button>
-              </>
-            )}
           </div>
         </DialogContent>
       </Dialog>

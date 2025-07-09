@@ -713,6 +713,81 @@ const removeFromFavourites = async (req, res) => {
     }
 }
 
+const unassignGptFromUser = async (req, res) => {
+    const { gptId } = req.params;
+    try {
+        // Validate gptId
+        if(!gptId || !mongoose.Types.ObjectId.isValid(gptId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid GPT ID provided'  
+            });
+        }
+        
+        // Check if admin
+        if(req.user.role !== 'admin') {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized' 
+            });
+        }
+        
+        // Get userId from request body
+        const { userId } = req.body;
+        
+        if(!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                success: false, 
+                message: 'Invalid user ID provided'
+            });
+        }
+        
+        // Find the user
+        const user = await User.findById(userId);
+        if(!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        
+        // Find the GPT
+        const gpt = await CustomGpt.findById(gptId);
+        if(!gpt) {  
+            return res.status(404).json({
+                success: false,
+                message: 'GPT not found'
+            });
+        }
+        
+        // Check if GPT is assigned to user using proper comparison for ObjectIds
+        const isAssigned = user.assignedGpts.some(id => id.toString() === gptId.toString());
+        if(!isAssigned) {
+            return res.status(400).json({
+                success: false,
+                message: 'GPT is not assigned to this user'
+            });
+        }
+        
+        // Remove GPT from user's assignments
+        await User.findByIdAndUpdate(userId, {
+            $pull: { assignedGpts: gptId }
+        });
+        
+        return res.status(200).json({
+            success: true,
+            message: 'GPT unassigned from user successfully'
+        });
+    } catch (error) {   
+        console.error('Error unassigning GPT from user:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to unassign GPT from user',
+            error: error.message
+        });
+    }
+}
+
 module.exports = {
     createCustomGpt,
     getAllCustomGpts,
@@ -720,6 +795,7 @@ module.exports = {
     updateCustomGpt,
     deleteCustomGpt,
     assignGptToUser,
+    unassignGptFromUser,
     getAssignedGpts,
     getCustomGptTools,
     updateCustomGptTools,

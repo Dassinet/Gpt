@@ -7,6 +7,7 @@ const {
   updateCustomGpt, 
   deleteCustomGpt,
   assignGptToUser,
+  unassignGptFromUser,
   getAssignedGpts,
   getCustomGptTools,
   updateCustomGptTools,
@@ -69,6 +70,7 @@ router.get('/favourites/:userId', protectRoute, restrictTo('user'), getFavourite
 router.delete('/favourites/:gptId', protectRoute, restrictTo('user'), removeFromFavourites); 
 router.post('/assign/:id', protectRoute, restrictTo('admin'), assignGptToUser);
 router.get('/assigned/:id', protectRoute, getAssignedGpts);
+router.delete('/unassign/:gptId', protectRoute, restrictTo('admin'), unassignGptFromUser);
 
 
 module.exports = router;
