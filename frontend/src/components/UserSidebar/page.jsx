@@ -83,7 +83,7 @@ export default function UserSidebar() {
         <div className="flex items-center justify-between p-4">
           {/* Logo */}
           <div className="flex items-center">
-            <span className="text-2xl font-bold group-data-[collapsible=icon]:hidden">DruidX</span>
+            <span className="text-2xl font-bold group-data-[collapsible=icon]:hidden">EMSA</span>
             <span className="text-xl font-bold hidden group-data-[collapsible=icon]:block">D</span>
           </div>
           
