@@ -239,15 +239,45 @@ class RAGApiClient {
       formData.append('is_user_document', 'true');
       formData.append('use_hybrid_search', 'true');
 
-      const response = await this.makeRequest(`${this.baseURL}/upload-chat-files`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${getToken()}`
-        },
-        body: formData
+      // Use XMLHttpRequest to track upload progress
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${this.baseURL}/upload-chat-files`, true);
+        
+        // Set auth header
+        xhr.setRequestHeader('Authorization', `Bearer ${getToken()}`);
+        
+        // Track upload progress
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const progress = Math.round((event.loaded / event.total) * 100);
+            if (options.onProgress) {
+              options.onProgress(progress);
+            }
+          }
+        };
+        
+        // Handle response
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resolve(response);
+            } catch (e) {
+              reject(new Error('Failed to parse response'));
+            }
+          } else {
+            reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+          }
+        };
+        
+        // Handle errors
+        xhr.onerror = () => {
+          reject(new Error('Network error occurred'));
+        };
+        
+        xhr.send(formData);
       });
-
-      return await response.json();
     } catch (error) {
       console.error('Error uploading chat files:', error);
       throw error;
