@@ -50,6 +50,8 @@ const Teams = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [availableGPTs, setAvailableGPTs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -144,7 +146,7 @@ const Teams = () => {
                 fullName: member.name || 'Unknown User',
                 email: member.email || 'No email',
                 role: member.role || 'user',
-                status: member.isVerified ? 'active' : 'pending',
+                status: 'active',
                 department: 'General',
                 profileImage: member.profilePic || null,
                 joinedAt: member.createdAt || new Date().toISOString(),
@@ -160,7 +162,7 @@ const Teams = () => {
                 fullName: member.name || 'Unknown User',
                 email: member.email || 'No email',
                 role: member.role || 'user',
-                status: member.isVerified ? 'active' : 'pending',
+                status: 'active',
                 department: 'General',
                 profileImage: member.profilePic || null,
                 joinedAt: member.createdAt || new Date().toISOString(),
@@ -217,6 +219,7 @@ const Teams = () => {
     }
 
     try {
+      setIsAssigning(true);
       const promises = selectedGPTs.map(gptId => {
         return axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assign/${gptId}`, {
           user: { _id: selectedMember.id },
@@ -258,6 +261,8 @@ const Teams = () => {
     } catch (error) {
       console.error('Error assigning GPTs:', error);
       toast.error('Failed to assign GPTs');
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -299,7 +304,7 @@ const Teams = () => {
             fullName: member.name || 'Unknown User',
             email: member.email || 'No email',
             role: member.role || 'user',
-            status: member.isVerified ? 'active' : 'pending',
+            status: 'active',
             department: 'General',
             profileImage: member.profilePic || null,
             joinedAt: member.createdAt || new Date().toISOString(),
@@ -317,18 +322,58 @@ const Teams = () => {
   };
 
   const handleEditRole = async () => {
-    if (!selectedMember || !editRoleForm.role || !editRoleForm.status) {
-      toast.error('Please fill in all fields');
+    if (!selectedMember || !editRoleForm.role) {
+      toast.error('Please select a role');
       return;
     }
 
     try {
-      // This endpoint needs to be created
-      toast.info('Role editing feature coming soon');
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/update-role/${selectedMember.id}`, 
+        {
+          role: editRoleForm.role,
+          status: editRoleForm.status
+        }, 
+        {
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 5000
+        }
+      );
+      
+      if (response.data.success) {
+        toast.success(`${selectedMember.name}'s role updated successfully`);
+        
+        // Update the user in the UI
+        setTeamMembers(prevMembers => prevMembers.map(member => {
+          if (member.id === selectedMember.id) {
+            return {
+              ...member,
+              role: editRoleForm.role,
+              status: editRoleForm.status || member.status
+            };
+          }
+          return member;
+        }));
+        
+        // Update stats if role changed from/to admin
+        if (selectedMember.role !== editRoleForm.role) {
+          setStats(prev => ({
+            ...prev,
+            admins: 
+              editRoleForm.role === 'admin' ? prev.admins + 1 :
+              selectedMember.role === 'admin' ? prev.admins - 1 : 
+              prev.admins
+          }));
+        }
+      }
+      
       setIsEditRoleOpen(false);
     } catch (error) {
-      console.error('Error updating user:', error);
-      toast.error('Failed to update user');
+      console.error('Error updating user role:', error);
+      toast.error(error.response?.data?.message || 'Failed to update user role');
     }
   };
 
@@ -375,8 +420,6 @@ const Teams = () => {
     switch (status) {
       case "active":
         return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
       case "inactive":
         return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
       default:
@@ -737,21 +780,30 @@ const Teams = () => {
             )}
           </div>
           <div className="flex flex-col sm:flex-row gap-2 px-4 pb-4 sm:px-6 sm:pb-6">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsAssignGPTOpen(false)}
-              className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleAssignGPTs}
-              disabled={!selectedGPTs.length}
-              className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-xs sm:text-sm h-8 sm:h-9"
-            >
-              <Bot className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              Assign Selected
-            </Button>
+            {isAssigning ? (
+              <Button className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700">
+                <Loader2 className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                Assigning...
+              </Button>
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsAssignGPTOpen(false)}
+                  className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleAssignGPTs}
+                  disabled={!selectedGPTs.length}
+                  className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-xs sm:text-sm h-8 sm:h-9"
+                >
+                  <Bot className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  Assign Selected
+                </Button>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -798,20 +850,29 @@ const Teams = () => {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 px-4 pb-4 sm:px-6 sm:pb-6 mt-2">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsEditRoleOpen(false)}
-              className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleEditRole}
-              className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-xs sm:text-sm h-8 sm:h-9"
-            >
-              <Save className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              Save Changes
-            </Button>
+            {isUpdating ? (
+              <Button className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700">
+                <Loader2 className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                Updating...
+              </Button>
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsEditRoleOpen(false)}
+                  className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleEditRole}
+                  className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-xs sm:text-sm h-8 sm:h-9"
+                >
+                  <Save className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  Save Changes
+                </Button>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>

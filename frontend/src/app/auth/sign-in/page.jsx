@@ -141,7 +141,7 @@ export default function SignIn() {
 
                 <div>
                     <Button
-                        variant="outline"
+                        variant="default"
                         type="button"
                         onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/google`}
                         disabled={isLoading}

@@ -304,16 +304,13 @@ const resendVerification = async (req, res) => {
 };
 
 const getTeams = async (req, res) => {
-
     try {
-        if (req.user.role !== 'admin') {
-            return res.status(401).json({
-                success: false,
-                message: 'Unauthorized'
-            });
-        }
-
-        const teams = await User.find({ role: 'user' });
+        // Get the current user's ID
+        const currentUserId = req.user._id;
+        
+        // Find all users excluding the current user
+        const teams = await User.find({ _id: { $ne: currentUserId } });
+        
         return res.status(200).json({
             success: true,
             teams
@@ -758,6 +755,70 @@ const googleAuthCallback = (req, res) => {
     res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/social-callback?token=${token}`);
 };
 
+const updateUserRole = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role, status } = req.body;
+        
+        // Only allow admin users to update roles
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Only admin users can update user roles' 
+            });
+        }
+        
+        if (!role) {
+            return res.status(400).json({
+                success: false,
+                message: 'Role is required'
+            });
+        }
+        
+        // Find the user to update
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        
+        // Don't allow changing own role (prevent admins from demoting themselves)
+        if (user._id.toString() === req.user._id.toString()) {
+            return res.status(400).json({
+                success: false,
+                message: 'You cannot change your own role'
+            });
+        }
+        
+        // Update the user
+        const updatedUser = await User.findByIdAndUpdate(
+            id,
+            { role },
+            { new: true, runValidators: true }
+        );
+        
+        return res.status(200).json({
+            success: true,
+            message: 'User role updated successfully',
+            user: {
+                _id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role
+            }
+        });
+    } catch (error) {
+        console.error('Error updating user role:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error updating user role',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     SignUp,
     verifyEmail,
@@ -776,5 +837,6 @@ module.exports = {
     acceptInvitation,
     validateInvitation,
     googleAuth,
-    googleAuthCallback
+    googleAuthCallback,
+    updateUserRole
 };

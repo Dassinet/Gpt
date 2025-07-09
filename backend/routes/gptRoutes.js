@@ -10,7 +10,10 @@ const {
   getAssignedGpts,
   getCustomGptTools,
   updateCustomGptTools,
-  getUserAssignedGptById
+  getUserAssignedGptById,
+  addToFavourites,
+  getFavourites,
+  removeFromFavourites
 } = require('../controllers/gptController');
 const { protectRoute, restrictTo } = require('../middleware/authMiddleware');
 
@@ -61,8 +64,11 @@ router.put('/:id', protectRoute, restrictTo('admin'), upload.fields([
 router.delete('/:id', protectRoute, restrictTo('admin'), deleteCustomGpt);
 router.get('/:id/tools', protectRoute, restrictTo('admin'), getCustomGptTools);
 router.post('/:id/tools', protectRoute, restrictTo('admin'), updateCustomGptTools);
-
+router.post('/:id/favourites', protectRoute, restrictTo('user'), addToFavourites);
+router.get('/favourites/:userId', protectRoute, restrictTo('user'), getFavourites);
+router.delete('/favourites/:gptId', protectRoute, restrictTo('user'), removeFromFavourites); 
 router.post('/assign/:id', protectRoute, restrictTo('admin'), assignGptToUser);
 router.get('/assigned/:id', protectRoute, getAssignedGpts);
+
 
 module.exports = router;

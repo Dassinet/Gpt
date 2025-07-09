@@ -5,6 +5,11 @@ const path = require('path');
 
 let s3Client;
 try {
+    // Add validation
+    if (!process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
+        throw new Error("Missing R2 environment variables");
+    }
+    
     s3Client = new S3Client({
         region: 'auto',
         endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -13,6 +18,8 @@ try {
             secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
         },
     });
+    
+    console.log("R2 client initialized successfully");
 } catch (error) {
     console.error("Error initializing S3Client:", error);
     throw new Error("Failed to initialize R2 client. Check credentials."); 

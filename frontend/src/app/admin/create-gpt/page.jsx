@@ -263,9 +263,8 @@ When providing code examples:
         url: endpoint,
         data: formDataToSend,
         headers: {
-          'Content-Type': 'multipart/form-data',
+          // Remove both Content-Type headers - axios will set multipart/form-data automatically
           'Authorization': `Bearer ${getToken()}`,
-          'Content-Type': 'application/json'
         },
         withCredentials: true
       });

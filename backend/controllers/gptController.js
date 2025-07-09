@@ -2,6 +2,7 @@ const CustomGpt = require('../models/gptModel');
 const { uploadToR2, deleteFromR2 } = require('../lib/r2');
 const User = require('../models/userModel');
 const mongoose = require('mongoose');
+const UserFavourite = require('../models/UserFavourite');
 
 const createCustomGpt = async (req, res) => {
     console.log('Creating custom GPT...');
@@ -570,6 +571,148 @@ const getUserAssignedGptById = async (req, res) => {
     }
 }
 
+
+const addToFavourites = async (req, res) => {
+    const { id } = req.params;
+    try {
+        if(!id || id === 'undefined' || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid GPT ID provided'
+            });
+        }
+        if(req.user.role !== 'user') {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized'
+            });
+        }
+        const { folder } = req.body;
+        const user = await User.findById(req.user._id);
+        if(!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        const gpt = await CustomGpt.findById(id);
+        if(!gpt) {
+            return res.status(404).json({
+                success: false,
+                message: 'GPT not found'
+            });
+        }
+        const existingFavourite = await UserFavourite.findOne({ user: user._id, gpt: id });
+        if(existingFavourite) {
+            return res.status(400).json({
+                success: false,
+                message: 'GPT already in favourites'
+            });
+        }
+        const newFavourite = new UserFavourite({ user: user._id, gpt: id, folder: folder || 'Uncategorized' });
+        await newFavourite.save();
+        return res.status(200).json({
+            success: true,
+            message: 'GPT added to favourites successfully'
+        });
+    } catch (error) {
+        console.error('Error adding to favourites:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to add to favourites',
+            error: error.message
+        });
+    }
+}
+
+const getFavourites = async (req, res) => {
+    const { userId } = req.params;
+    try {
+        if(!userId || userId === 'undefined' || !mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid user ID provided'
+            });
+        }
+        if(req.user.role !== 'user') {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized'
+            });
+        }
+        
+        // Ensure user can only access their own favourites
+        if(req.user._id.toString() !== userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied'
+            });
+        }
+        
+        const user = await User.findById(userId);
+        if(!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        
+        // Populate the GPT data in favourites
+        const favourites = await UserFavourite.find({ user: userId }).populate('gpt');
+        return res.status(200).json({
+            success: true,
+            favourites,
+            message: 'Fetched favourites successfully'
+        });
+    } catch (error) {
+        console.error('Error fetching favourites:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch favourites',
+            error: error.message
+        });
+    }
+}
+
+const removeFromFavourites = async (req, res) => {
+    const { gptId } = req.params;
+    try {
+        if(!gptId || gptId === 'undefined' || !mongoose.Types.ObjectId.isValid(gptId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid GPT ID provided'
+            }); 
+        }
+        if(req.user.role !== 'user') {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized'
+            }); 
+        }
+        
+        // Remove the body gpt check and use gptId from params
+        const favourite = await UserFavourite.findOne({ user: req.user._id, gpt: gptId });
+        if(!favourite) {
+            return res.status(404).json({
+                success: false, 
+                message: 'GPT not in favourites'
+            });
+        }
+        await UserFavourite.findByIdAndDelete(favourite._id);
+        return res.status(200).json({
+            success: true,  
+            message: 'GPT removed from favourites successfully'
+        });
+    } catch (error) {
+        console.error('Error removing from favourites:', error);
+        return res.status(500).json({
+            success: false, 
+            message: 'Failed to remove from favourites',
+            error: error.message
+        });
+    }
+}
+
 module.exports = {
     createCustomGpt,
     getAllCustomGpts,
@@ -580,5 +723,8 @@ module.exports = {
     getAssignedGpts,
     getCustomGptTools,
     updateCustomGptTools,
-    getUserAssignedGptById
+    getUserAssignedGptById,
+    addToFavourites,
+    getFavourites,
+    removeFromFavourites
 }; 

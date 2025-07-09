@@ -25,6 +25,7 @@ import {
 import { getToken, isAuthenticated, removeToken } from "@/lib/auth"; 
 import { toast } from "sonner";
 import axios from 'axios';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const UserSettings = () => {
   const router = useRouter();
@@ -311,6 +312,10 @@ const UserSettings = () => {
                 onChange={(e) => handleInputChange('department', e.target.value)}
                 placeholder="Enter your department"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="theme">Theme</Label>
+              <ThemeToggle />
             </div>
           </div>
           
