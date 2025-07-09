@@ -473,7 +473,10 @@ function ChatPageContent() {
 
     try {
       const result = await ragApiClient.uploadChatFiles(files, gptData, {
-        collectionName: `kb_${gptData._id}`
+        collectionName: `kb_${gptData._id}`,
+        onProgress: (progress) => {
+          setUploadProgress(progress);
+        }
       });
 
       if (result.success) {
