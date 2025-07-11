@@ -19,6 +19,7 @@ import { removeToken, getToken } from "@/lib/auth"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import axios from "axios"
+import Image from "next/image"
 
 // Admin menu items
 const adminItems = [
@@ -94,11 +95,20 @@ export default function AdminSidebar() {
       {/* Header with logo */}
       <SidebarHeader className="border-b border-border">
         <div className="flex items-center justify-between p-4">
-          {/* Logo - fix the collapsed state letter */}
-          <div className="flex items-center justify-center w-full group-data-[collapsible=icon]:w-auto">
-            <div className="flex items-center">
+          {/* Logo - always visible in both states */}
+          <div className="flex items-center justify-center w-full">
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex-shrink-0">
+                <Image 
+                  src="/EMSA logo.png" 
+                  alt="EMSA" 
+                  width={32} 
+                  height={32}
+                  className="w-8 h-8"
+                  priority
+                />
+              </div>
               <span className="text-2xl font-bold group-data-[collapsible=icon]:hidden">EMSA</span>
-              <span className="text-xl font-bold hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-full">E</span>
             </div>
           </div>
           
