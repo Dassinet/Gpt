@@ -10,21 +10,46 @@ import InputMessages from "@/components/chat/InputMessages";
 import ChatMessage from "@/components/chat/ChatMessage";
 import { ragApiClient } from "@/lib/ragApi";
 import { getUser, isAuthenticated, getToken } from "@/lib/auth";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
 
 const ErrorDisplay = ({ title, message, onRetry }) => {
+  const router = useRouter();
+  
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-white dark:bg-gray-900 p-4">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">{title}</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">{message}</p>
-        {onRetry && (
-          <button
-            onClick={onRetry}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Try Again
-          </button>
-        )}
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-[#1A1A1A]">
+      <div className="max-w-md w-full mx-auto p-6">
+        <Card className="border-red-200 dark:border-red-800">
+          <CardContent className="p-6 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              {title}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {message}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => router.push('/user/dashboard')}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                Back to Dashboard
+              </Button>
+              {onRetry && (
+                <Button
+                  onClick={onRetry}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Try Again
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -116,6 +141,11 @@ function ChatPageContent() {
     try {
       console.log("Fetching GPT data for ID:", gptId);
       
+      // Validate GPT ID format before making request
+      if (!gptId.match(/^[0-9a-fA-F]{24}$/)) {
+        throw new Error("Invalid GPT ID format");
+      }
+      
       // Use the user endpoint that checks assignment
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/gpt/user/${gptId}`, {
         headers: {
@@ -138,7 +168,9 @@ function ChatPageContent() {
       if (error.response?.status === 403) {
         throw new Error("Access denied. This GPT is not assigned to you.");
       } else if (error.response?.status === 404) {
-        throw new Error("GPT not found.");
+        throw new Error("GPT not found. It may have been deleted or the link is invalid.");
+      } else if (error.message === "Invalid GPT ID format") {
+        throw new Error("Invalid GPT ID format. Please check the URL.");
       } else {
         throw new Error("Failed to load GPT data. Please try again.");
       }
@@ -288,7 +320,13 @@ function ChatPageContent() {
     } catch (error) {
       console.error("Chat initialization failed:", error);
       setHasError(true);
-      setErrorMessage(error.message || "Failed to initialize chat. Please try again.");
+      
+      // Provide better error messages and actions
+      if (error.message.includes("GPT not found") || error.message.includes("Invalid GPT ID")) {
+        setErrorMessage("This GPT is no longer available. Please return to your dashboard to select another GPT.");
+      } else {
+        setErrorMessage(error.message || "Failed to initialize chat. Please try again.");
+      }
     } finally {
       setIsLoading(false);
       initializationRef.current = false;

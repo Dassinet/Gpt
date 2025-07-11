@@ -531,9 +531,10 @@ const getUserAssignedGptById = async (req, res) => {
         const customGpt = await CustomGpt.findById(id).populate('createdBy', 'firstName lastName email');
         
         if (!customGpt) {
+            console.log(`GPT with ID ${id} not found in database`);
             return res.status(404).json({
                 success: false,
-                message: 'GPT not found'
+                message: 'GPT not found. It may have been deleted or the ID is incorrect.'
             });
         }
         
@@ -546,16 +547,18 @@ const getUserAssignedGptById = async (req, res) => {
             });
         }
         
-        // Check if the GPT is assigned to the user
-        const isAssigned = user.assignedGpts.includes(id);
+        // Check if the GPT is assigned to the user (convert ObjectIds to strings for comparison)
+        const isAssigned = user.assignedGpts.some(gptId => gptId.toString() === id.toString());
         
         if (!isAssigned && req.user.role !== 'admin') {
+            console.log(`User ${req.user._id} attempted to access unassigned GPT ${id}`);
             return res.status(403).json({
                 success: false,
                 message: 'Access denied. This GPT is not assigned to you.'
             });
         }
         
+        console.log(`Successfully fetched GPT ${id} for user ${req.user._id}`);
         return res.status(200).json({
             success: true,
             customGpt,

@@ -365,16 +365,20 @@ const SettingsPage = () => {
 
   if (!userData) {
     return (
-      <Skeleton className="h-screen w-screen bg-white/5 dark:bg-black/5" />
+      <div className="min-h-screen w-full flex items-center justify-center bg-gray-100 dark:bg-[#1A1A1A] px-4">
+        <Skeleton className="h-[90vh] w-full max-w-5xl bg-white/10 dark:bg-black/10 rounded-lg" />
+      </div>
     );
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 bg-gray-100 dark:bg-[#1A1A1A] min-h-full rounded-lg">
+    <div className="min-h-screen w-full bg-gray-100 dark:bg-[#1A1A1A] px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 md:py-8">
       {/* Header */}
-      <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
-        <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Admin Settings</h1>
+      <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0 max-w-5xl mx-auto">
+        <div className="space-y-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Admin Settings
+          </h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             Manage your admin profile and system preferences
           </p>
@@ -382,16 +386,16 @@ const SettingsPage = () => {
         <Button 
           onClick={handleSave} 
           disabled={isLoading}
-          className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9"
+          className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto text-sm sm:text-base h-9 sm:h-10"
         >
           {isLoading ? (
             <>
-              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1.5 sm:mr-2"></div>
+              <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
               Saving...
             </>
           ) : (
             <>
-              <Save className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              <Save className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
               Save Changes
             </>
           )}
@@ -399,48 +403,48 @@ const SettingsPage = () => {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-5xl mx-auto mt-4 sm:mt-6 md:mt-8">
         {/* Left Column - Main Content */}
-        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6 md:space-y-8">
           {/* Profile Information */}
           <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-            <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-4 pt-3 sm:pt-4">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-gray-900 dark:text-white">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl text-gray-900 dark:text-white">
                 <User className="h-4 w-4 sm:h-5 sm:w-5" />
                 Profile Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-6 px-3 sm:px-4 pb-3 sm:pb-4">
+            <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6 pb-4 sm:pb-6">
               {/* Profile Picture and Basic Info */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
                 <div className="relative shrink-0">
-                  <Avatar className="h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24">
+                  <Avatar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24">
                     <AvatarImage src={userData?.profilePic} alt={userData?.name} />
-                    <AvatarFallback className="text-sm sm:text-lg lg:text-xl bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
+                    <AvatarFallback className="text-sm sm:text-base md:text-lg bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
                       {userData?.name ? userData.name.charAt(0).toUpperCase() : 'A'}
                     </AvatarFallback>
                   </Avatar>
                   <Button
                     size="sm"
-                    className="absolute -bottom-1 -right-1 h-6 w-6 sm:h-8 sm:w-8 rounded-full p-0 bg-purple-600 hover:bg-purple-700"
+                    className="absolute -bottom-1 -right-1 h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 rounded-full p-0 bg-purple-600 hover:bg-purple-700"
                   >
                     <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
                 
-                <div className="flex-1 w-full space-y-2 text-center sm:text-left">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                <div className="flex-1 w-full space-y-2 sm:space-y-3 text-center sm:text-left">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                    <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
                       {userData?.name || 'Loading...'}
                     </h3>
-                    <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 w-fit mx-auto sm:mx-0 text-xs">
+                    <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 w-fit mx-auto sm:mx-0 text-xs sm:text-sm">
                       <Crown className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
                       Administrator
                     </Badge>
                   </div>
                   <div className="flex items-center justify-center sm:justify-start gap-2 text-gray-600 dark:text-gray-400">
                     <Mail className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-                    <span className="text-xs sm:text-sm truncate">{userData?.email || 'Loading...'}</span>
+                    <span className="text-xs sm:text-sm truncate max-w-full">{userData?.email || 'Loading...'}</span>
                   </div>
                   <div className="flex items-center justify-center sm:justify-start gap-2 text-gray-600 dark:text-gray-400">
                     <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
@@ -454,8 +458,8 @@ const SettingsPage = () => {
               <Separator className="bg-gray-200 dark:bg-gray-700" />
 
               {/* Editable Profile Fields */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-xs sm:text-sm text-gray-900 dark:text-white">Name</Label>
                     <Input
@@ -492,11 +496,11 @@ const SettingsPage = () => {
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <Button 
                     onClick={handleProfileUpdate}
                     disabled={isProfileLoading}
-                    className="bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm h-8 sm:h-9"
+                    className="bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm h-8 sm:h-9 w-full sm:w-auto"
                   >
                     {isProfileLoading ? (
                       <>
@@ -513,62 +517,66 @@ const SettingsPage = () => {
                   
                   <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button variant="outline" className="text-xs sm:text-sm h-8 sm:h-9">
+                      <Button variant="outline" className="text-xs sm:text-sm h-8 sm:h-9 w-full sm:w-auto border-gray-200 dark:border-gray-700">
                         <Lock className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                         Change Password
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
+                    <DialogContent className="w-[95vw] max-w-md bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
                       <DialogHeader>
-                        <DialogTitle>Change Password</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-base sm:text-lg text-gray-900 dark:text-white">Change Password</DialogTitle>
+                        <DialogDescription className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                           Update your password. Make sure it's at least 6 characters long.
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="space-y-4 py-4">
+                      <div className="space-y-3 sm:space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label htmlFor="currentPassword">Current Password</Label>
+                          <Label htmlFor="currentPassword" className="text-xs sm:text-sm text-gray-900 dark:text-white">Current Password</Label>
                           <Input
                             id="currentPassword"
                             type="password"
                             value={passwordData.currentPassword}
                             onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                            className="bg-white dark:bg-gray-800"
+                            className="bg-white dark:bg-gray-800 text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="newPassword">New Password</Label>
+                          <Label htmlFor="newPassword" className="text-xs sm:text-sm text-gray-900 dark:text-white">New Password</Label>
                           <Input
                             id="newPassword"
                             type="password"
                             value={passwordData.newPassword}
                             onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                            className="bg-white dark:bg-gray-800"
+                            className="bg-white dark:bg-gray-800 text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                          <Label htmlFor="confirmPassword" className="text-xs sm:text-sm text-gray-900 dark:text-white">Confirm New Password</Label>
                           <Input
                             id="confirmPassword"
                             type="password"
                             value={passwordData.confirmPassword}
                             onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                            className="bg-white dark:bg-gray-800"
+                            className="bg-white dark:bg-gray-800 text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
                           />
                         </div>
                       </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+                      <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setIsPasswordDialogOpen(false)}
+                          className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
+                        >
                           Cancel
                         </Button>
                         <Button 
                           onClick={handlePasswordUpdate}
                           disabled={isPasswordLoading}
-                          className="bg-purple-600 hover:bg-purple-700"
+                          className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-xs sm:text-sm h-8 sm:h-9"
                         >
                           {isPasswordLoading ? (
                             <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1.5 sm:mr-2"></div>
                               Updating...
                             </>
                           ) : (
@@ -585,21 +593,21 @@ const SettingsPage = () => {
 
           {/* API Keys Management */}
           <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-            <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-4 pt-3 sm:pt-4">
-              <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-gray-900 dark:text-white">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3">
+              <div className="flex flex-col space-y-3 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl text-gray-900 dark:text-white">
                   <Key className="h-4 w-4 sm:h-5 sm:w-5" />
                   AI Provider API Keys
                 </CardTitle>
                 <Dialog open={isApiKeyDialogOpen} onOpenChange={setIsApiKeyDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9">
-                      <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                      <Plus className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                       Manage API Keys
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="w-[95vw] max-w-[500px] h-[85vh] max-h-[600px] flex flex-col bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-                    <DialogHeader className="flex-shrink-0 pb-2 px-4 pt-4 sm:px-6 sm:pt-6">
+                  <DialogContent className="w-[95vw] max-w-lg h-[85vh] max-h-[600px] flex flex-col bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+                    <DialogHeader className="flex-shrink-0 px-4 sm:px-6 pt-4 sm:pt-5 pb-2">
                       <DialogTitle className="text-base sm:text-lg text-gray-900 dark:text-white">AI Provider API Keys</DialogTitle>
                       <DialogDescription className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                         Configure your AI provider API keys. Leave empty to remove.
@@ -620,15 +628,14 @@ const SettingsPage = () => {
                                 value={bulkApiKeys[provider.value]?.name || ""}
                                 onChange={(e) => handleBulkApiKeyChange(provider.value, 'name', e.target.value)}
                                 placeholder="Display name (optional)"
-                                className="h-7 sm:h-8 text-xs bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600"
+                                className="h-8 sm:h-9 text-xs sm:text-sm bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600"
                               />
-                              
                               <Input
                                 type="password"
                                 value={bulkApiKeys[provider.value]?.key || ""}
                                 onChange={(e) => handleBulkApiKeyChange(provider.value, 'key', e.target.value)}
                                 placeholder={provider.placeholder}
-                                className="h-7 sm:h-8 text-xs font-mono bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600"
+                                className="h-8 sm:h-9 text-xs sm:text-sm font-mono bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600"
                               />
                             </div>
                           </div>
@@ -636,8 +643,8 @@ const SettingsPage = () => {
                       </div>
                     </div>
                     
-                    <DialogFooter className="flex-shrink-0 px-4 pb-4 sm:px-6 sm:pb-6 pt-3 border-t border-gray-200 dark:border-gray-700">
-                      <div className="flex flex-col sm:flex-row gap-2 w-full">
+                    <DialogFooter className="flex-shrink-0 px-4 sm:px-6 pt-3 pb-4 sm:pb-6 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
                         <Button 
                           variant="outline" 
                           onClick={() => setIsApiKeyDialogOpen(false)} 
@@ -652,7 +659,7 @@ const SettingsPage = () => {
                         >
                           {isLoading ? (
                             <>
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1.5 sm:mr-2"></div>
                               Saving...
                             </>
                           ) : (
@@ -665,41 +672,41 @@ const SettingsPage = () => {
                 </Dialog>
               </div>
             </CardHeader>
-            <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               {Object.keys(apiKeys).length === 0 ? (
                 <div className="text-center py-6 sm:py-8 text-gray-600 dark:text-gray-400">
-                  <Key className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-3 opacity-50" />
+                  <Key className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-3 sm:mb-4 opacity-50" />
                   <p className="text-sm sm:text-base font-medium mb-1">No API Keys Added</p>
                   <p className="text-xs sm:text-sm">Click "Manage API Keys" to add your AI provider keys.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 sm:space-y-4">
                   {Object.entries(apiKeys).map(([provider, keyData]) => {
                     const providerInfo = apiProviders.find(p => p.value === provider);
                     return (
-                      <div key={provider} className="flex flex-col sm:flex-row items-start gap-3 p-2 sm:p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                        <div className="flex items-start gap-3 flex-1 w-full min-w-0">
+                      <div key={provider} className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <div className="flex items-start gap-2 sm:gap-3 flex-1 w-full min-w-0">
                           <span className="text-base sm:text-lg shrink-0">{providerInfo?.icon}</span>
                           
                           <div className="flex-1 min-w-0 w-full">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-                              <p className="font-medium text-sm truncate text-gray-900 dark:text-white">{keyData.name || providerInfo?.label}</p>
-                              <div className="flex items-center gap-1 shrink-0">
+                              <p className="font-medium text-sm sm:text-base truncate text-gray-900 dark:text-white">{keyData.name || providerInfo?.label}</p>
+                              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => toggleShowApiKey(provider)}
-                                  className="h-6 w-6 p-0"
+                                  className="h-6 w-6 sm:h-7 sm:w-7 p-0"
                                 >
-                                  {showApiKeys[provider] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                  {showApiKeys[provider] ? <EyeOff className="h-3 w-3 sm:h-4 sm:w-4" /> : <Eye className="h-3 w-3 sm:h-4 sm:w-4" />}
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDeleteApiKey(provider)}
-                                  className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                                  className="h-6 w-6 sm:h-7 sm:w-7 p-0 text-red-600 hover:text-red-700"
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -721,14 +728,14 @@ const SettingsPage = () => {
 
           {/* Security Settings */}
           <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-            <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-4 pt-3 sm:pt-4">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-gray-900 dark:text-white">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl text-gray-900 dark:text-white">
                 <Shield className="h-4 w-4 sm:h-5 sm:w-5" />
                 Security & Privacy
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-4 pb-3 sm:pb-4">
-              <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+            <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
+              <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
                   <Label className="text-xs sm:text-sm text-gray-900 dark:text-white">Email Verification</Label>
                   <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400">Require email verification for new users</p>
@@ -742,7 +749,7 @@ const SettingsPage = () => {
               
               <Separator className="bg-gray-200 dark:bg-gray-700" />
               
-              <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
                   <Label className="text-xs sm:text-sm text-gray-900 dark:text-white">Two-Factor Authentication</Label>
                   <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400">Add an extra layer of security</p>
@@ -774,17 +781,17 @@ const SettingsPage = () => {
         </div>
 
         {/* Right Sidebar */}
-        <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+        <div className="lg:col-span-1 space-y-4 sm:space-y-6 md:space-y-8">
           {/* Appearance Settings */}
           <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-            <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-4 pt-3 sm:pt-4">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-gray-900 dark:text-white">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl text-gray-900 dark:text-white">
                 <Palette className="h-4 w-4 sm:h-5 sm:w-5" />
                 Appearance
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 <div className="space-y-1">
                   <Label className="text-xs sm:text-sm text-gray-900 dark:text-white">Theme</Label>
                   <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400">Choose your preferred theme</p>
@@ -796,14 +803,14 @@ const SettingsPage = () => {
 
           {/* Admin Preferences */}
           <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-            <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-4 pt-3 sm:pt-4">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-gray-900 dark:text-white">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl text-gray-900 dark:text-white">
                 <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
                 Preferences
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-4 pb-3 sm:pb-4">
-              <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+            <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
+              <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
                   <Label className="text-xs sm:text-sm text-gray-900 dark:text-white">Preview Mode</Label>
                   <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400">Show live preview while editing</p>
@@ -817,7 +824,7 @@ const SettingsPage = () => {
               
               <Separator className="bg-gray-200 dark:bg-gray-700" />
               
-              <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
                   <Label className="text-xs sm:text-sm text-gray-900 dark:text-white">Auto Save</Label>
                   <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400">Automatically save changes</p>
@@ -833,10 +840,10 @@ const SettingsPage = () => {
 
           {/* Account Stats */}
           <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-            <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-4 pt-3 sm:pt-4">
-              <CardTitle className="text-base sm:text-lg text-gray-900 dark:text-white">Account Overview</CardTitle>
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3">
+              <CardTitle className="text-lg sm:text-xl text-gray-900 dark:text-white">Account Overview</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 px-3 sm:px-4 pb-3 sm:pb-4">
+            <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
               <div className="flex justify-between items-center text-xs sm:text-sm">
                 <span className="text-gray-600 dark:text-gray-400">Account Status</span>
                 <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-[10px] sm:text-xs">
@@ -845,7 +852,7 @@ const SettingsPage = () => {
               </div>
               <div className="flex justify-between items-start text-xs sm:text-sm">
                 <span className="text-gray-600 dark:text-gray-400 shrink-0">Last Activity</span>
-                <span className="text-right text-[10px] sm:text-xs text-gray-900 dark:text-white">
+                <span className="text-right text-[10px] sm:text-xs text-gray-900 dark:text-white max-w-[60%]">
                   {formatDate(userData?.lastActive)}
                 </span>
               </div>
@@ -862,4 +869,3 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
-

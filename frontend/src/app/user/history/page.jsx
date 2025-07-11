@@ -208,160 +208,179 @@ const UserHistory = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-4">
-                  <Skeleton className="h-12 w-12 rounded-full" />
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-64" />
+      <div className="min-h-screen w-full bg-gray-100 dark:bg-[#1A1A1A] px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 md:py-8">
+        <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
+          <Skeleton className="h-8 w-40 sm:w-48" />
+          <div className="space-y-3 sm:space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <Card key={i} className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <Skeleton className="h-10 w-10 sm:h-12 sm:w-12 rounded-full" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-24 sm:w-32" />
+                      <Skeleton className="h-3 w-48 sm:w-64" />
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Chat History</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            View and manage your conversation history
-          </p>
-        </div>
-        
-        <div className="flex items-center w-full sm:w-auto">
-          <div className="relative flex-1 sm:flex-none">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search conversations..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full sm:w-64"
-            />
+    <div className="min-h-screen w-full bg-gray-100 dark:bg-[#1A1A1A] px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 md:py-8">
+      <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Chat History</h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+              View and manage your conversation history
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-none w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
+              <Input
+                placeholder="Search conversations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-full text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="w-full sm:w-auto h-8 sm:h-9 border-gray-200 dark:border-gray-700"
+            >
+              {isRefreshing ? (
+                <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 animate-spin mr-1.5 sm:mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
+              )}
+              Refresh
+            </Button>
           </div>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Conversations</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{groupedConversations.length}</p>
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+          <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Conversations</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{groupedConversations.length}</p>
+                </div>
+                <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
               </div>
-              <MessageSquare className="h-8 w-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Messages</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{conversations.length}</p>
-              </div>
-              <MessageSquare className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Conversations List */}
-      <div className="space-y-4">
-        {filteredConversations.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                {searchQuery ? 'No conversations found' : 'No chat history yet'}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                {searchQuery 
-                  ? 'Try adjusting your search terms' 
-                  : 'Start a conversation with a GPT to see it here'
-                }
-              </p>
             </CardContent>
           </Card>
-        ) : (
-          filteredConversations.map((conversation) => (
-            <Card 
-              key={conversation._id} 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => handleOpenConversation(conversation)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-purple-100 dark:bg-purple-900/20">
-                        <Bot className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-lg">{conversation.gptName}</CardTitle>
-                      <CardDescription className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline" className="text-xs">
-                          {conversation.model}
-                        </Badge>
-                        <span>•</span>
-                        <span className="whitespace-nowrap">{formatDate(conversation.updatedAt)}</span>
-                        <span>•</span>
-                        <span className="whitespace-nowrap">{conversation.messageCount || 0} messages</span>
-                      </CardDescription>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 mt-3 sm:mt-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenConversation(conversation);
-                      }}
-                    >
-                      Continue
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(conversation);
-                      }}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+          
+          <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total Messages</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{conversations.length}</p>
                 </div>
-              </CardHeader>
-              
-              <CardContent className="pt-0">
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                    {conversation.lastMessage || 'No messages yet'}
-                  </p>
-                </div>
+                <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Conversations List */}
+        <div className="space-y-3 sm:space-y-4 md:space-y-6">
+          {filteredConversations.length === 0 ? (
+            <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+              <CardContent className="p-8 sm:p-12 text-center">
+                <MessageSquare className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  {searchQuery ? 'No conversations found' : 'No chat history yet'}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  {searchQuery 
+                    ? 'Try adjusting your search terms' 
+                    : 'Start a conversation with a GPT to see it here'
+                  }
+                </p>
               </CardContent>
             </Card>
-          ))
-        )}
+          ) : (
+            filteredConversations.map((conversation) => (
+              <Card 
+                key={conversation._id} 
+                className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => handleOpenConversation(conversation)}
+              >
+                <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+                    <div className="flex items-center space-x-3 sm:space-x-4">
+                      <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
+                        <AvatarFallback className="bg-purple-100 dark:bg-purple-900/20">
+                          <Bot className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <CardTitle className="text-base sm:text-lg text-gray-900 dark:text-white">{conversation.gptName}</CardTitle>
+                        <CardDescription className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm overflow-hidden">
+                          <Badge variant="outline" className="text-[10px] sm:text-xs border-gray-200 dark:border-gray-700 text-ellipsis overflow-hidden max-w-full">
+                            {conversation.model}
+                          </Badge>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="whitespace-nowrap truncate max-w-full">{formatDate(conversation.updatedAt)}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="whitespace-nowrap truncate max-w-full">{conversation.messageCount || 0} messages</span>
+                        </CardDescription>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 sm:space-x-3 mt-3 sm:mt-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenConversation(conversation);
+                        }}
+                        className="text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
+                      >
+                        Continue
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(conversation);
+                        }}
+                        className="h-8 w-8 sm:h-9 sm:w-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      >
+                        <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="px-4 sm:px-6 pt-0 pb-4 sm:pb-6 overflow-hidden">
+                  <div className="space-y-2">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2 overflow-hidden">
+                      {conversation.lastMessage || 'No messages yet'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

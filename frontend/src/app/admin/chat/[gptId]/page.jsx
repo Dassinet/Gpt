@@ -14,14 +14,14 @@ import { getUser, isAuthenticated, getToken } from "@/lib/auth";
 
 const ErrorDisplay = ({ title, message, onRetry }) => {
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-white dark:bg-gray-900 p-4">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">{title}</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">{message}</p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4 sm:px-6 md:px-8 lg:px-12">
+      <div className="text-center max-w-sm w-full sm:max-w-md md:max-w-lg">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-red-600 mb-3 sm:mb-4">{title}</h2>
+        <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400 mb-3 sm:mb-4">{message}</p>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white text-sm sm:text-base rounded-md hover:bg-blue-700 transition-colors duration-200"
           >
             Try Again
           </button>
@@ -31,62 +31,47 @@ const ErrorDisplay = ({ title, message, onRetry }) => {
   );
 };
 
-// Loading component for Suspense
 function LoadingState() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-gray-600">Loading chat...</p>
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 md:px-8 lg:px-12">
+      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-3 sm:mb-4"></div>
+      <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400">Loading chat...</p>
     </div>
   );
 }
 
-// Component that uses useSearchParams
 function ChatPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const gptId = params.gptId;
   const router = useRouter();
   
-  // Get user from auth.js instead of Clerk
   const [user, setUser] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  
-  // Core states
   const [gptData, setGptData] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
-  
-  // File upload states
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  
-  // Streaming and conversation states
   const [streamingMessage, setStreamingMessage] = useState("");
   const [conversationMemory, setConversationMemory] = useState([]);
   const [conversationId, setConversationId] = useState(null);
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [userDocuments, setUserDocuments] = useState([]);
-  
-  // Loading and error states
   const [isLoading, setIsLoading] = useState(true);
   const [ragInitialized, setRagInitialized] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  
-  // Refs for optimization
   const saveTimeoutRef = useRef(null);
   const initializationRef = useRef(false);
 
-  // Get conversationId from URL
   const conversationIdFromUrl = useMemo(() => 
     searchParams.get('conversationId'), 
     [searchParams]
   );
   
-  // Initialize user auth state
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -110,14 +95,11 @@ function ChatPageContent() {
     checkAuth();
   }, [router]);
 
-  // Fetch real GPT data from backend instead of creating hardcoded data
   const fetchGptData = useCallback(async () => {
     if (!gptId) return null;
     
     try {
       console.log("Fetching GPT data for ID:", gptId);
-      
-      // Call the backend server directly on port 3001
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/gpt/${gptId}`, {
         headers: {
           'Authorization': `Bearer ${getToken()}`,
@@ -135,8 +117,6 @@ function ChatPageContent() {
       
     } catch (error) {
       console.error("Error fetching GPT data:", error);
-      
-      // Only as a last resort, create minimal data with the actual gptId
       console.warn("Falling back to minimal GPT data");
       return {
         _id: gptId,
@@ -151,7 +131,6 @@ function ChatPageContent() {
     }
   }, [gptId]);
 
-  // Initialize RAG context with better error handling
   const initializeRAGContext = useCallback(async (gptData) => {
     if (!user || !user.userId) {
       console.warn("Cannot initialize RAG context: User data is missing or incomplete");
@@ -161,7 +140,6 @@ function ChatPageContent() {
     
     try {
       console.log("Initializing RAG context for GPT:", gptData.name);
-      
       const response = await ragApiClient.initializeGPTContext(user, gptData);
       
       if (response) {
@@ -176,14 +154,11 @@ function ChatPageContent() {
     }
   }, [user]);
 
-  // Load conversation history with timeout
   const loadConversationHistory = useCallback(async (convId) => {
     if (!convId) return;
     
     try {
       console.log("Loading conversation history for:", convId);
-      
-      // Use the correct endpoint from chatRoutes.js: /api/chat/:id
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/chat/${convId}`, {
         headers: {
           'Authorization': `Bearer ${getToken()}`,
@@ -213,7 +188,6 @@ function ChatPageContent() {
     }
   }, []);
 
-  // Main initialization function with timeout
   const initializeChat = useCallback(async () => {
     if (initializationRef.current) {
       console.log("Initialization already in progress, skipping");
@@ -226,14 +200,11 @@ function ChatPageContent() {
     setErrorMessage("");
 
     try {
-      // Check if user is available
       if (!user || !user.userId) {
         throw new Error("User not authenticated. Please sign in.");
       }
 
       console.log("Initializing chat with user:", user);
-
-      // 1. Fetch real GPT data from backend
       const gptResult = await fetchGptData();
       if (!gptResult) {
         throw new Error("Failed to fetch GPT data");
@@ -242,7 +213,6 @@ function ChatPageContent() {
       setGptData(gptResult);
       console.log("GPT data loaded:", gptResult);
 
-      // 2. Load conversation history if requested (with timeout)
       if (conversationIdFromUrl) {
         const historyPromise = Promise.race([
           loadConversationHistory(conversationIdFromUrl),
@@ -255,11 +225,9 @@ function ChatPageContent() {
           await historyPromise;
         } catch (error) {
           console.warn("Failed to load conversation history:", error.message);
-          // Don't block initialization for history loading failures
         }
       }
 
-      // 3. Initialize RAG context (non-blocking, with timeout)
       const ragPromise = Promise.race([
         initializeRAGContext(gptResult),
         new Promise((resolve) => 
@@ -271,7 +239,6 @@ function ChatPageContent() {
       ]);
       
       try {
-        // Before initializing, check if MCP is enabled and log it
         if (gptResult.capabilities && gptResult.capabilities.mcp) {
           console.log("MCP is enabled for this GPT, schema:", 
             gptResult.mcpSchema ? "provided" : "not provided");
@@ -289,7 +256,6 @@ function ChatPageContent() {
         setRagInitialized(false);
       }
 
-      // Chat is ready even if RAG failed
       console.log("Chat initialization completed successfully");
 
     } catch (error) {
@@ -302,7 +268,6 @@ function ChatPageContent() {
     }
   }, [user, gptId, conversationIdFromUrl, fetchGptData, loadConversationHistory, initializeRAGContext]);
 
-  // Main initialization effect with proper dependencies
   useEffect(() => {
     if (isLoaded && user && gptId && !initializationRef.current) {
       console.log("Starting chat initialization...");
@@ -310,7 +275,6 @@ function ChatPageContent() {
     }
   }, [isLoaded, user, gptId, initializeChat]);
 
-  // Conversation saving with debounce - updated to use correct endpoint
   const saveConversationToHistory = useCallback(async (conversationData) => {
     try {
       if (saveTimeoutRef.current) {
@@ -322,7 +286,6 @@ function ChatPageContent() {
           return null;
         }
 
-        // Save each message individually using the /api/chat/save endpoint
         try {
           let savedConversationId = conversationId;
           
@@ -369,7 +332,6 @@ function ChatPageContent() {
     }
   }, [user?.userId, gptData, conversationId]);
 
-  // Message sending with better error handling
   const handleSendMessage = useCallback(async (message) => {
     if (!message.trim() || isSending || !gptData) return;
     
@@ -391,7 +353,6 @@ function ChatPageContent() {
     setStreamingMessage("");
     setIsSending(true);
 
-    // Update memory efficiently
     const updatedMemory = [...conversationMemory.slice(-9), {
       role: 'user',
       content: message,
@@ -405,7 +366,6 @@ function ChatPageContent() {
         content: msg.content
       }));
 
-      // Check if RAG is available, if not use basic chat
       if (!ragInitialized) {
         const basicResponse = "I'm currently connecting to the AI service. Please try again in a moment, or the RAG service may be unavailable.";
         
@@ -458,7 +418,6 @@ function ChatPageContent() {
       setStreamingMessage("");
       setMessages(prev => [...prev, aiMessage]);
       
-      // Save conversation in background
       setTimeout(() => {
         const completedMessages = [...messages, userMessage, aiMessage];
         const conversationData = {
@@ -476,7 +435,6 @@ function ChatPageContent() {
         saveConversationToHistory(conversationData);
       }, 100);
       
-      // Update memory efficiently
       const newMemory = [...updatedMemory.slice(-9), {
         role: 'assistant',
         content: fullResponse,
@@ -503,7 +461,6 @@ function ChatPageContent() {
     userDocuments, webSearchEnabled, conversationId, saveConversationToHistory
   ]);
 
-  // File upload handler
   const handleFileUpload = useCallback(async (files) => {
     if (!files.length || !gptData) return;
 
@@ -535,7 +492,6 @@ function ChatPageContent() {
     }
   }, [gptData]);
 
-  // Error retry handler
   const handleRetry = useCallback(() => {
     initializationRef.current = false;
     setHasError(false);
@@ -543,45 +499,42 @@ function ChatPageContent() {
     initializeChat();
   }, [initializeChat]);
 
-  // Add new chat handler
   const handleNewChat = useCallback(() => {
-    // Clear current conversation state
     setMessages([]);
     setStreamingMessage("");
     setConversationMemory([]);
     setConversationId(null);
     setUploadedFiles([]);
     
-    // Clear URL conversation parameter if it exists
     const url = new URL(window.location);
     url.searchParams.delete('conversationId');
     window.history.replaceState({}, '', url);
     
-    // Show success toast
     toast.success("New chat started", { duration: 2000 });
   }, []);
 
-  // Loading state - show loading only briefly
   if (!isLoaded) {
-    return <div className="flex items-center justify-center h-screen">
-      <div className="text-center">
-        <div className="w-12 h-12 border-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400">Loading authentication...</p>
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4 sm:px-6 md:px-8 lg:px-12">
+        <div className="text-center">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 border-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400">Loading authentication...</p>
+        </div>
       </div>
-    </div>;
+    );
   }
 
-  // Show loading only if we don't have basic data yet
   if (isLoading && !gptData) {
-    return <div className="flex items-center justify-center h-screen">
-      <div className="text-center">
-        <div className="w-12 h-12 border-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400">Initializing chat...</p>
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4 sm:px-6 md:px-8 lg:px-12">
+        <div className="text-center">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 border-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400">Initializing chat...</p>
+        </div>
       </div>
-    </div>;
+    );
   }
 
-  // Error state
   if (hasError) {
     return (
       <ErrorDisplay
@@ -592,9 +545,8 @@ function ChatPageContent() {
     );
   }
 
-  // Main render - show UI even if RAG is still initializing
   return (
-    <div className="h-screen flex flex-col bg-white dark:bg-black">
+    <div className="flex flex-col min-h-screen w-full bg-white dark:bg-black">
       <ChatHeader 
         gptData={gptData}
         webSearchEnabled={webSearchEnabled}
@@ -602,31 +554,30 @@ function ChatPageContent() {
         ragInitialized={ragInitialized}
         user={user}
         onNewChat={handleNewChat}
+        className="px-2 sm:px-4 md:px-6 lg:px-8"
       />
       
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Show a banner if RAG is still initializing */}
+      <div className="flex-1 flex flex-col overflow-hidden">
         {gptData && !ragInitialized && isLoading && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-2 sm:px-4 md:px-6 lg:px-8 py-1.5 sm:py-2">
+            <p className="text-xs sm:text-sm md:text-base text-yellow-800 dark:text-yellow-200 text-center">
               🔄 Connecting to AI service... Basic chat available, advanced features loading.
             </p>
           </div>
         )}
         
-        {/* Message display area using InputMessages component */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-2 sm:px-4 md:px-6 lg:px-8">
           <InputMessages
             messages={messages}
             gptData={gptData}
             isSending={isSending}
             streamingMessage={streamingMessage}
             onSendMessage={handleSendMessage}
+            className="max-w-4xl mx-auto w-full"
           />
         </div>
         
-        {/* Input area using ChatMessage component with max width */}
-        <div className="w-full max-w-3xl mx-auto px-4 pb-4">
+        <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4">
           <ChatMessage
             onSendMessage={handleSendMessage}
             onFileUpload={handleFileUpload}
@@ -638,6 +589,7 @@ function ChatPageContent() {
             disabled={!gptData}
             isUploading={isUploading}
             uploadProgress={uploadProgress}
+            className="w-full"
           />
         </div>
       </div>
@@ -645,7 +597,6 @@ function ChatPageContent() {
   );
 }
 
-// Main component wrapped in Suspense
 export default function ChatPage() {
   return (
     <Suspense fallback={<LoadingState />}>

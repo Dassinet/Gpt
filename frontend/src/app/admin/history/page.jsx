@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, Calendar, Search, Trash2, Bot, User } from "lucide-react";
+import { MessageSquare, Calendar, Search, Trash2, Bot } from "lucide-react";
 import { getToken, isAuthenticated } from "@/lib/auth";
 import { toast } from "sonner";
 import axios from 'axios';
@@ -21,7 +21,7 @@ export default function AdminHistory() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
 
-  // First fetch current user data
+  // Fetch current user data
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -129,24 +129,24 @@ export default function AdminHistory() {
 
   if (isLoading || !currentUser) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-10 w-full sm:w-64" />
         </div>
         <div className="grid gap-4">
           {[...Array(5)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
+            <Card key={i} className="overflow-hidden">
+              <CardHeader className="p-4">
                 <div className="flex items-center space-x-3">
                   <Skeleton className="h-12 w-12 rounded-full" />
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex-1">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-24" />
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4">
                 <Skeleton className="h-4 w-full" />
               </CardContent>
             </Card>
@@ -157,24 +157,26 @@ export default function AdminHistory() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl bg-gray-100 dark:bg-[#1A1A1A] min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Chat History</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">
+            Chat History
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
             View and manage your conversation history
           </p>
         </div>
         
-        <div className="flex items-center w-full sm:w-auto">
-          <div className="relative flex-1 sm:flex-none">
+        <div className="w-full sm:w-auto">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full sm:w-64"
+              className="pl-9 w-full sm:w-64 text-sm h-9 focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -182,25 +184,31 @@ export default function AdminHistory() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-6">
+        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
+          <CardContent className="p-4">
             <div className="flex items-center">
-              <MessageSquare className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Conversations</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{conversations.length}</p>
+              <MessageSquare className="h-6 w-6 text-blue-600 flex-shrink-0" />
+              <div className="ml-4 min-w-0">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">
+                  Total Conversations
+                </p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {conversations.length}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-6">
+        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
+          <CardContent className="p-4">
             <div className="flex items-center">
-              <Bot className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active GPTs</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <Bot className="h-6 w-6 text-green-600 flex-shrink-0" />
+              <div className="ml-4 min-w-0">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">
+                  Active GPTs
+                </p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {new Set(conversations.map(conv => conv.gptId)).size}
                 </p>
               </div>
@@ -208,13 +216,15 @@ export default function AdminHistory() {
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-6">
+        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
+          <CardContent className="p-4">
             <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">This Week</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <Calendar className="h-6 w-6 text-purple-600 flex-shrink-0" />
+              <div className="ml-4 min-w-0">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">
+                  This Week
+                </p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {conversations.filter(conv => {
                     const weekAgo = new Date();
                     weekAgo.setDate(weekAgo.getDate() - 7);
@@ -230,13 +240,13 @@ export default function AdminHistory() {
       {/* Conversations List */}
       <div className="space-y-4">
         {filteredConversations.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
+          <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
+            <CardContent className="p-6 text-center">
               <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 {searchQuery ? 'No conversations found' : 'No chat history yet'}
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {searchQuery 
                   ? 'Try adjusting your search terms' 
                   : 'Start a conversation with a GPT to see it here'
@@ -246,30 +256,35 @@ export default function AdminHistory() {
           </Card>
         ) : (
           filteredConversations.map((conversation) => (
-            <Card key={conversation._id} className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader className="pb-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-12 w-12">
+            <Card 
+              key={conversation._id} 
+              className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
+            >
+              <CardHeader className="p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <Avatar className="h-10 w-10 flex-shrink-0">
                       <AvatarFallback className="bg-purple-100 dark:bg-purple-900/20">
-                        <Bot className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                        <Bot className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <CardTitle className="text-lg">{conversation.gptName}</CardTitle>
-                      <CardDescription className="flex items-center space-x-2">
-                        <Badge variant="outline" className="text-xs">
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-base font-semibold text-gray-900 dark:text-white truncate">
+                        {conversation.gptName}
+                      </CardTitle>
+                      <CardDescription className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        <Badge variant="outline" className="text-[10px]">
                           {conversation.model}
                         </Badge>
-                        <span>•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span>{formatDate(conversation.updatedAt)}</span>
-                        <span>•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span>{conversation.messages?.length || 0} messages</span>
                       </CardDescription>
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 flex-shrink-0">
                     <Button
                       variant="outline"
                       size="sm"
@@ -277,6 +292,7 @@ export default function AdminHistory() {
                         e.stopPropagation();
                         handleOpenConversation(conversation);
                       }}
+                      className="text-sm h-8 px-3"
                     >
                       Continue
                     </Button>
@@ -287,7 +303,7 @@ export default function AdminHistory() {
                         e.stopPropagation();
                         handleDelete(conversation._id);
                       }}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 h-8 w-8 p-0"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -295,7 +311,10 @@ export default function AdminHistory() {
                 </div>
               </CardHeader>
               
-              <CardContent className="pt-0" onClick={() => handleOpenConversation(conversation)}>
+              <CardContent 
+                className="p-4 pt-0" 
+                onClick={() => handleOpenConversation(conversation)}
+              >
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                     {conversation.lastMessage || 'No messages yet'}

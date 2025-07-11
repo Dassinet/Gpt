@@ -20,7 +20,8 @@ import {
   Brain,
   MessageSquare,
   Star,
-  RefreshCw
+  RefreshCw,
+  Heart
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -223,15 +224,15 @@ const AdminCollections = () => {
   return (
     <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 bg-gray-100 dark:bg-[#1A1A1A] min-h-full rounded-lg">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">GPT Collections</h1>
-          <p className="text-muted-foreground">Manage your custom GPTs</p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="w-full sm:w-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left">GPT Collections</h1>
+          <p className="text-muted-foreground text-center sm:text-left">Manage your custom GPTs</p>
         </div>
-        <div className="w-full sm:w-auto flex gap-2 flex-col sm:flex-row">
+        <div className="w-full sm:w-auto self-stretch">
           <Button 
             onClick={() => router.push('/admin/create-gpt')}
-            className="bg-purple-600 hover:bg-purple-700 text-white cursor-pointer"
+            className="bg-purple-600 hover:bg-purple-700 text-white cursor-pointer w-full sm:w-auto"
           >
             <Plus className="mr-2 h-4 w-4" />
             Create New GPT
@@ -240,14 +241,14 @@ const AdminCollections = () => {
       </div>
 
       {/* Search */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        <div className="relative max-w-md flex-1">
+      <div className="flex flex-col sm:flex-row gap-4 items-center w-full">
+        <div className="relative w-full max-w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Search GPTs..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
       </div>
@@ -259,14 +260,14 @@ const AdminCollections = () => {
         </h2>
         
         {filteredGpts.length === 0 ? (
-          <div className="text-center py-12">
-            <Bot className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600" />
-            <p className="text-lg font-medium text-gray-500 dark:text-gray-400 mt-4">
+          <div className="text-center py-8 sm:py-12">
+            <Bot className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-gray-400 dark:text-gray-600" />
+            <p className="text-base sm:text-lg font-medium text-gray-500 dark:text-gray-400 mt-4">
               {searchTerm 
                 ? 'No GPTs found matching your search' 
                 : 'No GPTs created yet'}
             </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
+            <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-2">
               {searchTerm 
                 ? 'Try adjusting your search terms' 
                 : 'Create your first GPT to get started'}
@@ -281,32 +282,32 @@ const AdminCollections = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {filteredGpts.map((gpt) => (
               <Card 
                 key={gpt._id} 
-                className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow group flex flex-col"
+                className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow group flex flex-col h-full overflow-hidden"
               >
-                <CardHeader className="pb-3">
+                <CardHeader className="p-4 pb-2 sm:pb-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[calc(100%-40px)] overflow-hidden">
                       {gpt.imageUrl ? (
                         <img 
                           src={gpt.imageUrl} 
                           alt={gpt.name}
-                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center flex-shrink-0">
-                          <Bot className="h-6 w-6 text-purple-600" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center flex-shrink-0">
+                          <Bot className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                         </div>
                       )}
-                      <div className="min-w-0">
-                        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                      <div className="min-w-0 flex-1 overflow-hidden">
+                        <CardTitle className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white break-words line-clamp-2 leading-tight">
                           {gpt.name}
                         </CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
+                        <div className="flex items-center gap-1 sm:gap-2 mt-1 flex-wrap">
+                          <Badge variant="outline" className="text-xs whitespace-nowrap max-w-full truncate">
                             {gpt.model || 'Default Model'}
                           </Badge>
                         </div>
@@ -314,7 +315,7 @@ const AdminCollections = () => {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-70 sm:opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -342,34 +343,34 @@ const AdminCollections = () => {
                     </DropdownMenu>
                   </div>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                <CardContent className="p-4 pt-0 flex-1 flex flex-col overflow-hidden">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 break-words line-clamp-3 leading-relaxed hyphens-auto">
                     {gpt.description}
                   </p>
                   
-                  <div className="space-y-3 mt-auto">
-                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="space-y-2 sm:space-y-3 mt-auto">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 overflow-hidden">
                       <User className="h-3 w-3 flex-shrink-0" />
-                      <span className="truncate">
+                      <span className="break-words truncate">
                         {gpt.createdBy?.firstName} {gpt.createdBy?.lastName}
                       </span>
                     </div>
                     
                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                       <Calendar className="h-3 w-3 flex-shrink-0" />
-                      <span>{formatDate(gpt.createdAt)}</span>
+                      <span className="break-words truncate">{formatDate(gpt.createdAt)}</span>
                     </div>
                     
                     {gpt.knowledgeFiles?.length > 0 && (
-                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 overflow-hidden">
                         <FileText className="h-3 w-3 flex-shrink-0" />
-                        <span>{gpt.knowledgeFiles.length} knowledge files</span>
+                        <span className="break-words truncate">{gpt.knowledgeFiles.length} knowledge files</span>
                       </div>
                     )}
                     
-                    <div className="flex flex-wrap gap-1 min-h-[24px]">
+                    <div className="flex flex-wrap gap-1 min-h-[20px] overflow-hidden">
                       {getCapabilityBadges(gpt.capabilities).map((capability) => (
-                        <Badge key={capability} variant="outline" className="text-xs">
+                        <Badge key={capability} variant="outline" className="text-xs break-words max-w-full">
                           {capability}
                         </Badge>
                       ))}
@@ -377,9 +378,9 @@ const AdminCollections = () => {
                     
                     <Button 
                       onClick={() => router.push(`/admin/chat/${gpt._id}`)}
-                      className="w-full mt-2 bg-purple-600 hover:bg-purple-700 text-white"
+                      className="w-full mt-2 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm"
                     >
-                      <MessageSquare className="mr-2 h-4 w-4" />
+                      <MessageSquare className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                       Start Chat
                     </Button>
                   </div>
@@ -392,18 +393,19 @@ const AdminCollections = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="max-w-md md:max-w-lg mx-auto">
+        <DialogContent className="max-w-[90%] sm:max-w-md md:max-w-lg mx-auto">
           <DialogHeader>
             <DialogTitle>Delete GPT</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete "{selectedGpt?.name}"? This action cannot be undone and will permanently remove all associated files and data.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
             <Button 
               variant="outline" 
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleting}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -411,6 +413,7 @@ const AdminCollections = () => {
               variant="destructive" 
               onClick={handleDelete}
               disabled={deleting}
+              className="w-full sm:w-auto"
             >
               {deleting ? 'Deleting...' : 'Delete GPT'}
             </Button>

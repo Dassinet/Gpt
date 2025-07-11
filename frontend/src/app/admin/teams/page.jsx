@@ -77,8 +77,6 @@ const Teams = () => {
     status: ''
   });
 
-  const [assignProgress, setAssignProgress] = useState(0);
-
   useEffect(() => {
     axios.defaults.withCredentials = true;
     
@@ -224,13 +222,11 @@ const Teams = () => {
     try {
       setIsAssigning(true);
       
-      // Separate the GPTs to assign and unassign
       const gptsToAssign = selectedGPTs.filter(id => !id.startsWith('unassign-'));
       const gptsToUnassign = selectedGPTs
         .filter(id => id.startsWith('unassign-'))
         .map(id => id.replace('unassign-', ''));
       
-      // Handle assignments
       const assignPromises = gptsToAssign.map(async gptId => {
         try {
           await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assign/${gptId}`, {
@@ -249,7 +245,6 @@ const Teams = () => {
         }
       });
       
-      // Handle unassignments
       const unassignPromises = gptsToUnassign.map(async gptId => {
         try {
           await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/unassign/${gptId}`, {
@@ -268,16 +263,16 @@ const Teams = () => {
       
       await Promise.all([...assignPromises, ...unassignPromises]);
       
-      // Update the member's assigned GPTs
       const gptResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${selectedMember.id}`
-      , {
-        headers: {
-          'Authorization': `Bearer ${getToken()}`,
-          'Content-Type': 'application/json'
-        },
-        timeout: 5000
-      });
+        `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${selectedMember.id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 5000
+        }
+      );
       
       const assignedGpts = gptResponse.data.assignedGpts || [];
       
@@ -330,7 +325,6 @@ const Teams = () => {
         setIsInviteMemberOpen(false);
         setInviteForm({ email: '', role: 'user', message: '' });
         
-        // Optionally refresh the team list to show the pending invitation
         const membersResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/teams`, {
           headers: {
             'Authorization': `Bearer ${getToken()}`,
@@ -369,6 +363,7 @@ const Teams = () => {
     }
 
     try {
+      setIsUpdating(true);
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/auth/update-role/${selectedMember.id}`, 
         {
@@ -387,7 +382,6 @@ const Teams = () => {
       if (response.data.success) {
         toast.success(`${selectedMember.name}'s role updated successfully`);
         
-        // Update the user in the UI
         setTeamMembers(prevMembers => prevMembers.map(member => {
           if (member.id === selectedMember.id) {
             return {
@@ -399,7 +393,6 @@ const Teams = () => {
           return member;
         }));
         
-        // Update stats if role changed from/to admin
         if (selectedMember.role !== editRoleForm.role) {
           setStats(prev => ({
             ...prev,
@@ -415,6 +408,8 @@ const Teams = () => {
     } catch (error) {
       console.error('Error updating user role:', error);
       toast.error(error.response?.data?.message || 'Failed to update user role');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -470,12 +465,17 @@ const Teams = () => {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6 bg-gray-100 dark:bg-[#1A1A1A] min-h-full rounded-lg">
+      <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl bg-gray-100 dark:bg-[#1A1A1A] min-h-screen">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/3 mb-6"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 bg-gray-300 dark:bg-gray-700 rounded"></div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-48 bg-gray-300 dark:bg-gray-700 rounded"></div>
+              <div key={i} className="h-64 bg-gray-300 dark:bg-gray-700 rounded"></div>
             ))}
           </div>
         </div>
@@ -484,76 +484,78 @@ const Teams = () => {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 bg-gray-100 dark:bg-[#1A1A1A] min-h-full rounded-lg">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Team Management</h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+    <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl bg-gray-100 dark:bg-[#1A1A1A] min-h-screen">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-gray-900 dark:text-white truncate">
+            Team Management
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
             Manage team members and their access permissions ({stats.total} members)
           </p>
         </div>
         <Dialog open={isInviteMemberOpen} onOpenChange={setIsInviteMemberOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9">
-              <Plus className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto text-sm h-9">
+              <Plus className="mr-2 h-4 w-4" />
               Invite Member
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-[95vw] max-w-[425px] bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-            <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4">
-              <DialogTitle className="text-base sm:text-lg text-gray-900 dark:text-white">Invite Team Member</DialogTitle>
-              <DialogDescription className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+          <DialogContent className="w-[95vw] max-w-md bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 rounded-lg">
+            <DialogHeader className="px-6 py-4">
+              <DialogTitle className="text-lg text-gray-900 dark:text-white">Invite Team Member</DialogTitle>
+              <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
                 Send an invitation to join your team with specific role and permissions.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-3 sm:gap-4 px-4 pb-4 sm:px-6 sm:pb-6">
+            <div className="grid gap-4 px-6 pb-6">
               <div className="grid gap-2">
-                <Label htmlFor="email" className="text-xs sm:text-sm text-gray-900 dark:text-white">Email Address</Label>
+                <Label htmlFor="email" className="text-sm text-gray-900 dark:text-white">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter email address"
                   value={inviteForm.email}
                   onChange={(e) => setInviteForm({...inviteForm, email: e.target.value})}
-                  className="h-8 sm:h-9 text-xs sm:text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                  className="h-9 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="role" className="text-xs sm:text-sm text-gray-900 dark:text-white">Role</Label>
+                <Label htmlFor="role" className="text-sm text-gray-900 dark:text-white">Role</Label>
                 <Select value={inviteForm.role} onValueChange={(value) => setInviteForm({...inviteForm, role: value})}>
-                  <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm border-gray-200 dark:border-gray-700">
+                  <SelectTrigger className="h-9 text-sm border-gray-200 dark:border-gray-700">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
-                  <SelectContent className="text-xs sm:text-sm bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+                  <SelectContent className="text-sm bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="user">User</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="message" className="text-xs sm:text-sm text-gray-900 dark:text-white">Custom Message (Optional)</Label>
+                <Label htmlFor="message" className="text-sm text-gray-900 dark:text-white">Custom Message (Optional)</Label>
                 <Textarea
                   id="message"
                   placeholder="Add a personal message to the invitation..."
                   value={inviteForm.message}
                   onChange={(e) => setInviteForm({...inviteForm, message: e.target.value})}
-                  className="min-h-[60px] text-xs sm:text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                  className="min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                 />
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 px-4 pb-4 sm:px-6 sm:pb-6">
+            <div className="flex flex-col sm:flex-row gap-3 px-6 pb-6">
               <Button 
                 variant="outline" 
                 onClick={() => setIsInviteMemberOpen(false)}
-                className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
+                className="w-full sm:w-auto text-sm h-9 border-gray-200 dark:border-gray-700"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleInviteMember} 
-                className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-xs sm:text-sm h-8 sm:h-9"
+                className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-sm h-9"
               >
-                <Send className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <Send className="mr-2 h-4 w-4" />
                 Send Invitation
               </Button>
             </div>
@@ -561,69 +563,69 @@ const Teams = () => {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-          <CardContent className="p-3 sm:p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total Members</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Total Members</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
               </div>
-              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 dark:text-purple-400" />
+              <Users className="h-6 w-6 text-purple-600 dark:text-purple-400 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-          <CardContent className="p-3 sm:p-4">
+        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Active</p>
-                <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.active}</p>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Active</p>
+                <p className="text-xl font-bold text-green-600">{stats.active}</p>
               </div>
-              <UserCheck className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+              <UserCheck className="h-6 w-6 text-green-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-          <CardContent className="p-3 sm:p-4">
+        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Admins</p>
-                <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.admins}</p>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Admins</p>
+                <p className="text-xl font-bold text-red-600">{stats.admins}</p>
               </div>
-              <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-red-600" />
+              <Shield className="h-6 w-6 text-red-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-          <CardContent className="p-3 sm:p-4">
+        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total GPTs</p>
-                <p className="text-xl sm:text-2xl font-bold text-purple-600">{stats.totalGPTs}</p>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Total GPTs</p>
+                <p className="text-xl font-bold text-purple-600">{stats.totalGPTs}</p>
               </div>
-              <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
+              <Bot className="h-6 w-6 text-purple-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Search team members..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 sm:pl-10 h-9 bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm"
+            className="pl-10 h-9 text-sm bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <Select value={filterRole} onValueChange={setFilterRole}>
-          <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs sm:text-sm bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-            <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+          <SelectTrigger className="w-full sm:w-48 h-9 text-sm bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+            <Shield className="h-4 w-4 mr-2" />
             <SelectValue placeholder="Filter by role" />
           </SelectTrigger>
-          <SelectContent className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 text-xs sm:text-sm">
+          <SelectContent className="text-sm bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
             <SelectItem value="all">All Roles</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
             <SelectItem value="user">User</SelectItem>
@@ -631,34 +633,34 @@ const Teams = () => {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredMembers.map((member) => (
-          <Card key={member.id} className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-4 pt-3 sm:pt-4">
+          <Card key={member.id} className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow overflow-hidden">
+            <CardHeader className="p-4">
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar className="h-10 w-10 flex-shrink-0">
                     <AvatarImage src={member.profileImage} alt={member.name} />
-                    <AvatarFallback className="bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-sm sm:text-base">
+                    <AvatarFallback className="bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-sm">
                       {member.name?.charAt(0)?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <CardTitle className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate max-w-[150px] sm:max-w-[200px]">
+                  <div className="min-w-0">
+                    <CardTitle className="text-base font-semibold text-gray-900 dark:text-white truncate">
                       {member.fullName || member.name || 'Unknown User'}
                     </CardTitle>
-                    <CardDescription className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate max-w-[150px] sm:max-w-[200px]">
+                    <CardDescription className="text-sm text-gray-600 dark:text-gray-400 truncate">
                       {member.department || 'No department'}
                     </CardDescription>
                   </div>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
-                      <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 text-xs sm:text-sm">
+                  <DropdownMenuContent align="end" className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 text-sm">
                     <DropdownMenuItem 
                       className="text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={() => {
@@ -667,7 +669,7 @@ const Teams = () => {
                         setIsEditRoleOpen(true);
                       }}
                     >
-                      <Edit className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      <Edit className="mr-2 h-4 w-4" />
                       Edit Role
                     </DropdownMenuItem>
                     <DropdownMenuItem 
@@ -678,51 +680,51 @@ const Teams = () => {
                         setIsAssignGPTOpen(true);
                       }}
                     >
-                      <Bot className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      <Bot className="mr-2 h-4 w-4" />
                       Assign GPT
                     </DropdownMenuItem>
                     <DropdownMenuItem className="text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                      <Mail className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      <Mail className="mr-2 h-4 w-4" />
                       Send Message
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                       onClick={() => handleRemoveMember(member)}
                     >
-                      <Trash2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      <Trash2 className="mr-2 h-4 w-4" />
                       Remove
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             </CardHeader>
-            <CardContent className="pb-3 sm:pb-4 px-3 sm:px-4">
+            <CardContent className="p-4 pt-0">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 dark:text-gray-400" />
-                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">{member.email}</span>
+                  <Mail className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400 truncate">{member.email}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 dark:text-gray-400" />
-                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     Joined {new Date(member.joinedAt).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 dark:text-gray-400" />
-                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     {member.lastActive ? `Last active: ${new Date(member.lastActive).toLocaleDateString()}` : 'Not active yet'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 dark:text-gray-400" />
-                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  <Bot className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     {member.gptCount} GPTs assigned
                   </span>
                 </div>
                 {member.gptCount > 0 && (
-                  <div className="mt-1 pl-5">
-                    <div className="text-xs text-gray-500 dark:text-gray-500 max-h-12 overflow-y-auto">
+                  <div className="mt-2 pl-6">
+                    <div className="text-xs text-gray-500 dark:text-gray-500 max-h-16 overflow-y-auto">
                       {member.assignedGpts.map((gpt, index) => (
                         <div key={gpt._id} className="truncate">
                           • {gpt.name}
@@ -738,12 +740,12 @@ const Teams = () => {
                 )}
               </div>
             </CardContent>
-            <CardFooter className="pt-0 px-3 sm:px-4 pb-3 sm:pb-4 flex justify-between items-center">
+            <CardFooter className="p-4 pt-0 flex justify-between items-center">
               <div className="flex gap-2">
-                <Badge className={`${getRoleColor(member.role)} text-[10px] sm:text-xs`}>
+                <Badge className={`${getRoleColor(member.role)} text-xs`}>
                   {member.role}
                 </Badge>
-                <Badge className={`${getStatusColor(member.status)} text-[10px] sm:text-xs`}>
+                <Badge className={`${getStatusColor(member.status)} text-xs`}>
                   {member.status}
                 </Badge>
               </div>
@@ -753,21 +755,21 @@ const Teams = () => {
       </div>
 
       <Dialog open={isAssignGPTOpen} onOpenChange={setIsAssignGPTOpen}>
-        <DialogContent className="w-[95vw] max-w-[500px] bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-          <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4">
-            <DialogTitle className="text-base sm:text-lg text-gray-900 dark:text-white">
+        <DialogContent className="w-[95vw] max-w-lg bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 rounded-lg">
+          <DialogHeader className="px-6 py-4">
+            <DialogTitle className="text-lg text-gray-900 dark:text-white">
               Assign GPTs to {selectedMember?.name}
             </DialogTitle>
-            <DialogDescription className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
               Select the GPTs you want to assign to this team member.
               {selectedMember?.gptCount > 0 && (
                 <span> They currently have {selectedMember.gptCount} GPTs assigned.</span>
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[50vh] overflow-y-auto px-4 sm:px-6">
+          <div className="max-h-[50vh] overflow-y-auto px-6 py-2">
             {availableGPTs.length ? (
-              <div className="space-y-2 py-2">
+              <div className="space-y-2">
                 {availableGPTs.map(gpt => {
                   const isAlreadyAssigned = selectedMember?.assignedGpts?.some(
                     assignedGpt => assignedGpt._id === gpt._id
@@ -788,10 +790,8 @@ const Teams = () => {
                         onCheckedChange={(checked) => {
                           if (isAlreadyAssigned) {
                             if (checked) {
-                              // Remove from unassign list when checking
                               setSelectedGPTs(prev => prev.filter(id => id !== `unassign-${gpt._id}`));
                             } else {
-                              // Add to unassign list when unchecking
                               setSelectedGPTs(prev => [...prev, `unassign-${gpt._id}`]);
                             }
                           } else {
@@ -805,7 +805,7 @@ const Teams = () => {
                       />
                       <Label 
                         htmlFor={`gpt-${gpt._id}`}
-                        className={`text-xs sm:text-sm flex-1 cursor-pointer ${
+                        className={`text-sm flex-1 cursor-pointer truncate ${
                           isAlreadyAssigned 
                             ? 'text-purple-700 dark:text-purple-400 font-medium' 
                             : 'text-gray-900 dark:text-white'
@@ -823,67 +823,67 @@ const Teams = () => {
                 })}
               </div>
             ) : (
-              <p className="py-8 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              <p className="py-8 text-center text-sm text-gray-600 dark:text-gray-400">
                 No GPTs available to assign.
               </p>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 px-4 pb-4 sm:px-6 sm:pb-6">
-              <Button 
-                onClick={handleAssignGPTs}
-                disabled={!selectedGPTs.length || isAssigning}
-                className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm h-8 sm:h-9 flex items-center justify-center"
-              >
-                {isAssigning ? (
-                  <>
-                    <Loader2 className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                    Assigning...
-                  </>
-                ) : (
-                  <>
-                    <Bot className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    Update GPT Access
-                  </>
-                )}
-              </Button>
+          <div className="flex flex-col sm:flex-row gap-3 px-6 pb-6">
+            <Button 
+              onClick={handleAssignGPTs}
+              disabled={!selectedGPTs.length || isAssigning}
+              className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white text-sm h-9 flex items-center justify-center"
+            >
+              {isAssigning ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Assigning...
+                </>
+              ) : (
+                <>
+                  <Bot className="mr-2 h-4 w-4" />
+                  Update GPT Access
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isEditRoleOpen} onOpenChange={setIsEditRoleOpen}>
-        <DialogContent className="w-[95vw] max-w-[425px] bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
-          <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4">
-            <DialogTitle className="text-base sm:text-lg text-gray-900 dark:text-white">Edit User Role</DialogTitle>
-            <DialogDescription className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+        <DialogContent className="w-[95vw] max-w-md bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 rounded-lg">
+          <DialogHeader className="px-6 py-4">
+            <DialogTitle className="text-lg text-gray-900 dark:text-white">Edit User Role</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
               Change role and status for {selectedMember?.name}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 px-4 sm:px-6">
+          <div className="grid gap-4 px-6">
             <div className="grid gap-2">
-              <Label htmlFor="edit-role" className="text-xs sm:text-sm text-gray-900 dark:text-white">Role</Label>
+              <Label htmlFor="edit-role" className="text-sm text-gray-900 dark:text-white">Role</Label>
               <Select 
                 value={editRoleForm.role} 
                 onValueChange={(value) => setEditRoleForm({...editRoleForm, role: value})}
               >
-                <SelectTrigger id="edit-role" className="h-8 sm:h-9 text-xs sm:text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <SelectTrigger id="edit-role" className="h-9 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
-                <SelectContent className="text-xs sm:text-sm bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+                <SelectContent className="text-sm bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="user">User</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-status" className="text-xs sm:text-sm text-gray-900 dark:text-white">Status</Label>
+              <Label htmlFor="edit-status" className="text-sm text-gray-900 dark:text-white">Status</Label>
               <Select 
                 value={editRoleForm.status} 
                 onValueChange={(value) => setEditRoleForm({...editRoleForm, status: value})}
               >
-                <SelectTrigger id="edit-status" className="h-8 sm:h-9 text-xs sm:text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <SelectTrigger id="edit-status" className="h-9 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
-                <SelectContent className="text-xs sm:text-sm bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+                <SelectContent className="text-sm bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
@@ -891,10 +891,10 @@ const Teams = () => {
               </Select>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 px-4 pb-4 sm:px-6 sm:pb-6 mt-2">
+          <div className="flex flex-col sm:flex-row gap-3 px-6 pb-6 mt-4">
             {isUpdating ? (
-              <Button className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700">
-                <Loader2 className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+              <Button className="w-full sm:w-auto text-sm h-9 border-gray-200 dark:border-gray-700">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Updating...
               </Button>
             ) : (
@@ -902,15 +902,15 @@ const Teams = () => {
                 <Button 
                   variant="outline" 
                   onClick={() => setIsEditRoleOpen(false)}
-                  className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9 border-gray-200 dark:border-gray-700"
+                  className="w-full sm:w-auto text-sm h-9 border-gray-200 dark:border-gray-700"
                 >
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleEditRole}
-                  className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-xs sm:text-sm h-8 sm:h-9"
+                  className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-sm h-9"
                 >
-                  <Save className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <Save className="mr-2 h-4 w-4" />
                   Save Changes
                 </Button>
               </>
@@ -919,23 +919,22 @@ const Teams = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Empty state handling */}
       {filteredMembers.length === 0 && !loading && (
-        <div className="text-center py-8 sm:py-12">
-          <Users className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 dark:text-gray-600" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No team members found</h3>
-          <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-center py-12">
+          <Users className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" />
+          <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">No team members found</h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {searchTerm || filterRole !== "all" ? 
               "Try adjusting your filters to see more results." : 
               "Get started by inviting team members to your organization."}
           </p>
           {(!searchTerm && filterRole === "all") && (
-            <div className="mt-4 sm:mt-6">
+            <div className="mt-6">
               <Button 
                 onClick={() => setIsInviteMemberOpen(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm h-8 sm:h-9"
+                className="bg-purple-600 hover:bg-purple-700 text-white text-sm h-9"
               >
-                <UserPlus className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <UserPlus className="mr-2 h-4 w-4" />
                 Invite Team Member
               </Button>
             </div>

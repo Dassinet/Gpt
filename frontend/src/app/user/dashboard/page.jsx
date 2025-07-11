@@ -80,14 +80,15 @@ const UserDashboard = () => {
         
         // Fetch GPTs assigned to this user
         const assignedGptsResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${userId}`
-        , {
-          headers: {
-            'Authorization': `Bearer ${getToken()}`,
-            'Content-Type': 'application/json'
-          },
-          timeout: 5000
-        });
+          `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/assigned/${userId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${getToken()}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 5000
+          }
+        );
         
         if (assignedGptsResponse.data.success) {
           setAssignedGpts(assignedGptsResponse.data.assignedGpts || []);
@@ -149,7 +150,6 @@ const UserDashboard = () => {
 
       if (response.data.success) {
         toast.success('Added to favourites');
-        // Refresh favourites
         const favouritesResponse = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/favourites/${user.userId}`,
           {
@@ -191,7 +191,6 @@ const UserDashboard = () => {
 
       if (response.data.success) {
         toast.success('Removed from favourites');
-        // Refresh favourites
         const favouritesResponse = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/api/gpt/favourites/${user.userId}`,
           {
@@ -238,18 +237,35 @@ const UserDashboard = () => {
     return badges;
   };
 
-  // Handle start conversation
+  // Handle start conversation with validation
   const handleStartConversation = (gpt) => {
+    // Validate GPT ID before navigation
+    if (!gpt._id || !gpt._id.match(/^[0-9a-fA-F]{24}$/)) {
+      toast.error('Invalid GPT ID. Please refresh the page.');
+      return;
+    }
+    
+    // Check if GPT is still available
+    if (!gpt.name || !gpt.description) {
+      toast.error('This GPT appears to be corrupted. Please contact support.');
+      return;
+    }
+    
     router.push(`/user/chat/${gpt._id}`);
   };
 
   if (loading) {  
     return (
-      <div className="p-6 space-y-6 bg-gray-100 dark:bg-[#1A1A1A] min-h-full rounded-lg">
+      <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl bg-gray-100 dark:bg-[#1A1A1A] min-h-screen">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
+          <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/3 mb-6"></div>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 bg-gray-300 dark:bg-gray-700 rounded"></div>
+            ))}
+          </div>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-6">
+            {[...Array(8)].map((_, i) => (
               <div key={i} className="h-64 bg-gray-300 dark:bg-gray-700 rounded"></div>
             ))}
           </div>
@@ -259,84 +275,88 @@ const UserDashboard = () => {
   }
 
   return (  
-    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 bg-gray-100 dark:bg-[#1A1A1A] min-h-full rounded-lg">
+    <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl bg-gray-100 dark:bg-[#1A1A1A] min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Manage your GPTs</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="min-w-0 w-full sm:w-auto">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white break-words line-clamp-2">
+            Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 break-words">
+            Manage your GPTs
+          </p>
         </div>
-        <div className="w-full sm:w-auto flex gap-2">
-          <div className="relative max-w-md flex-1">
+        <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1 max-w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search GPTs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-9 text-sm bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 w-full"
             />
           </div>
           <Button 
             onClick={() => router.push('/user/favourites')}
             variant="outline"
-            className="flex items-center gap-2"
+            className="h-9 text-sm border-gray-200 dark:border-gray-700 whitespace-nowrap"
           >
-            <Heart className="h-4 w-4" />
+            <Heart className="mr-2 h-4 w-4" />
             Favourites
           </Button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-4">
-        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">My GPTs</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{assignedGpts.length}</p>
+              <div className="min-w-0 flex-1 mr-2">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 break-words line-clamp-2">My GPTs</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">{assignedGpts.length}</p>
               </div>
-              <Bot className="h-8 w-8 text-purple-600" />
+              <Bot className="h-6 w-6 text-purple-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Favourites</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{favourites.length}</p>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Favourites</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">{favourites.length}</p>
               </div>
-              <Heart className="h-8 w-8 text-red-600" />
+              <Heart className="h-6 w-6 text-red-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">With Knowledge</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">With Knowledge</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {assignedGpts.filter(gpt => gpt?.knowledgeFiles?.length > 0).length}
                 </p>
               </div>
-              <FileText className="h-8 w-8 text-green-600" />
+              <FileText className="h-6 w-6 text-green-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700">
+        <Card className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Featured</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Featured</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {Math.min(assignedGpts.length, 3)}
                 </p>
               </div>
-              <Star className="h-8 w-8 text-yellow-600" />
+              <Star className="h-6 w-6 text-yellow-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -344,13 +364,13 @@ const UserDashboard = () => {
 
       {/* GPTs Grid */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">
           My Assigned GPTs ({filteredGpts.length})
         </h2>
         
         {filteredGpts.length === 0 ? (
           <div className="text-center py-12">
-            <Bot className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600" />
+            <Bot className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" />
             <p className="text-lg font-medium text-gray-500 dark:text-gray-400 mt-4">
               {searchTerm 
                 ? 'No GPTs found matching your search' 
@@ -365,27 +385,27 @@ const UserDashboard = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredGpts.map((gpt) => (
-              <Card key={gpt._id} className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
+              <Card key={gpt._id} className="bg-white dark:bg-[#2A2A2A] border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow overflow-hidden h-full flex flex-col">
+                <CardHeader className="p-4 pb-2 sm:pb-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[calc(100%-40px)] overflow-hidden">
                       {gpt.imageUrl ? (
                         <img 
                           src={gpt.imageUrl} 
                           alt={gpt.name}
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                          <Bot className="h-6 w-6 text-purple-600" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center flex-shrink-0">
+                          <Bot className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                         </div>
                       )}
-                      <div>
-                        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <div className="min-w-0 flex-1 overflow-hidden">
+                        <CardTitle className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white break-words line-clamp-2 leading-tight">
                           {gpt.name}
                         </CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
+                        <div className="flex items-center gap-1 sm:gap-2 mt-1 flex-wrap">
+                          <Badge variant="outline" className="text-xs whitespace-nowrap max-w-full truncate">
                             {gpt.model || 'Default Model'}
                           </Badge>
                         </div>
@@ -402,7 +422,7 @@ const UserDashboard = () => {
                         }
                       }}
                       disabled={addingToFavourites[gpt._id]}
-                      className={`p-1 h-8 w-8 ${
+                      className={`p-1 h-8 w-8 flex-shrink-0 ${
                         isGptInFavourites(gpt._id) 
                           ? 'text-red-500 hover:text-red-600' 
                           : 'text-gray-400 hover:text-red-500'
@@ -416,27 +436,27 @@ const UserDashboard = () => {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                <CardContent className="p-4 pt-0 flex-1 flex flex-col overflow-hidden">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 break-words line-clamp-3 leading-relaxed hyphens-auto">
                     {gpt.description}
                   </p>
                   
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                      <Calendar className="h-3 w-3" />
-                      <span>{formatDate(gpt.createdAt)}</span>
+                  <div className="space-y-2 sm:space-y-3 mt-auto">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 overflow-hidden">
+                      <Calendar className="h-3 w-3 flex-shrink-0" />
+                      <span className="break-words truncate">{formatDate(gpt.createdAt)}</span>
                     </div>
                     
                     {gpt.knowledgeFiles?.length > 0 && (
-                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                        <FileText className="h-3 w-3" />
-                        <span>{gpt.knowledgeFiles.length} knowledge files</span>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 overflow-hidden">
+                        <FileText className="h-3 w-3 flex-shrink-0" />
+                        <span className="break-words truncate">{gpt.knowledgeFiles.length} knowledge files</span>
                       </div>
                     )}
                     
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1 min-h-[20px] overflow-hidden">
                       {getCapabilityBadges(gpt.capabilities).map((capability) => (
-                        <Badge key={capability} variant="outline" className="text-xs">
+                        <Badge key={capability} variant="outline" className="text-xs break-words max-w-full">
                           {capability}
                         </Badge>
                       ))}
@@ -444,9 +464,9 @@ const UserDashboard = () => {
                     
                     <Button 
                       onClick={() => handleStartConversation(gpt)} 
-                      className="w-full mt-2 bg-purple-600 hover:bg-purple-700 text-white"
+                      className="w-full mt-2 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm"
                     >
-                      <MessageSquare className="mr-2 h-4 w-4" />
+                      <MessageSquare className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                       Start Chat
                     </Button>
                   </div>
