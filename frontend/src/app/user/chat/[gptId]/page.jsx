@@ -38,15 +38,15 @@ const ErrorDisplay = ({ title, message, onRetry }) => {
               >
                 Back to Dashboard
               </Button>
-              {onRetry && (
+        {onRetry && (
                 <Button
-                  onClick={onRetry}
+            onClick={onRetry}
                   variant="outline"
                   className="flex-1"
-                >
-                  Try Again
+          >
+            Try Again
                 </Button>
-              )}
+        )}
             </div>
           </CardContent>
         </Card>
@@ -325,7 +325,7 @@ function ChatPageContent() {
       if (error.message.includes("GPT not found") || error.message.includes("Invalid GPT ID")) {
         setErrorMessage("This GPT is no longer available. Please return to your dashboard to select another GPT.");
       } else {
-        setErrorMessage(error.message || "Failed to initialize chat. Please try again.");
+      setErrorMessage(error.message || "Failed to initialize chat. Please try again.");
       }
     } finally {
       setIsLoading(false);

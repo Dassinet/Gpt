@@ -68,18 +68,18 @@ const ChatMessage = ({
   };
 
   const getFileIcon = (filename) => {
-    if (!filename) return <File size={12} className="sm:h-3.5 sm:w-3.5" />;
+    if (!filename) return <File size={14} className="sm:h-4 sm:w-4" />;
     const extension = filename.split('.').pop().toLowerCase();
     switch (extension) {
       case 'pdf':
-        return <FileText size={12} className="sm:h-3.5 sm:w-3.5 text-red-400" />;
+        return <FileText size={14} className="sm:h-4 sm:w-4 text-red-400" />;
       case 'doc':
       case 'docx':
-        return <FileText size={12} className="sm:h-3.5 sm:w-3.5 text-blue-400" />;
+        return <FileText size={14} className="sm:h-4 sm:w-4 text-blue-400" />;
       case 'txt':
-        return <FileText size={12} className="sm:h-3.5 sm:w-3.5" />;
+        return <FileText size={14} className="sm:h-4 sm:w-4" />;
       default:
-        return <File size={12} className="sm:h-3.5 sm:w-3.5" />;
+        return <File size={14} className="sm:h-4 sm:w-4" />;
     }
   };
 
@@ -90,10 +90,10 @@ const ChatMessage = ({
         <div className="mb-2 sm:mb-3 lg:mb-4">
           <div className="flex items-center p-2 sm:p-2.5 lg:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/30">
             <div className="flex-shrink-0 mr-2 sm:mr-2.5 lg:mr-3">
-              <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 animate-spin text-blue-500 dark:text-blue-400" />
+              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 animate-spin text-blue-500 dark:text-blue-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] sm:text-xs lg:text-sm font-medium text-blue-700 dark:text-blue-300 mb-1 sm:mb-1.5 lg:mb-2">
+              <div className="text-xs sm:text-sm lg:text-base font-medium text-blue-700 dark:text-blue-300 mb-1 sm:mb-1.5 lg:mb-2">
                 {uploadedFiles.length === 1
                   ? `Uploading ${uploadedFiles[0]?.name}`
                   : `Uploading ${uploadedFiles.length} files`}
@@ -102,7 +102,7 @@ const ChatMessage = ({
                 value={uploadProgress} 
                 className="h-1 sm:h-1.5 lg:h-2 bg-blue-100 dark:bg-blue-800/40"
               />
-              <div className="text-[9px] sm:text-[10px] lg:text-xs text-blue-600 dark:text-blue-400 mt-0.5 sm:mt-1">
+              <div className="text-[10px] sm:text-xs lg:text-sm text-blue-600 dark:text-blue-400 mt-0.5 sm:mt-1">
                 {uploadProgress}% complete
               </div>
             </div>
@@ -123,11 +123,11 @@ const ChatMessage = ({
                   {getFileIcon(file.name)}
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] sm:text-[10px] lg:text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[80px] sm:max-w-[100px] lg:max-w-[140px]">
+                  <span className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-700 dark:text-gray-300 truncate max-w-[80px] sm:max-w-[100px] lg:max-w-[140px]">
                     {file.name}
                   </span>
                   {file.size && (
-                    <span className="text-[8px] sm:text-[9px] lg:text-[10px] text-gray-500 dark:text-gray-400">
+                    <span className="text-[9px] sm:text-[10px] lg:text-xs text-gray-500 dark:text-gray-400">
                       {(file.size / 1024).toFixed(1)} KB
                     </span>
                   )}
@@ -137,7 +137,7 @@ const ChatMessage = ({
                   className="ml-0.5 sm:ml-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 p-0.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors flex-shrink-0"
                   aria-label="Remove file"
                 >
-                  <X size={10} className="sm:h-3 sm:w-3" />
+                  <X size={12} className="sm:h-3.5 sm:w-3.5" />
                 </button>
               </div>
             ))}
@@ -150,7 +150,7 @@ const ChatMessage = ({
           <div className="flex flex-col px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 lg:py-3">
             <textarea
               ref={textareaRef}
-              className="w-full bg-transparent border-0 outline-none text-black dark:text-white resize-none overflow-hidden min-h-[32px] sm:min-h-[36px] lg:min-h-[40px] text-[11px] sm:text-xs lg:text-sm placeholder-gray-500 dark:placeholder-gray-400 custom-scrollbar-dark dark:custom-scrollbar"
+              className="w-full bg-transparent border-0 outline-none text-black dark:text-white resize-none overflow-hidden min-h-[32px] sm:min-h-[36px] lg:min-h-[40px] text-xs sm:text-sm lg:text-base placeholder-gray-500 dark:placeholder-gray-400 custom-scrollbar-dark dark:custom-scrollbar"
               placeholder={placeholder}
               value={inputMessage}
               onChange={handleTextareaChange}
@@ -180,11 +180,11 @@ const ChatMessage = ({
                 <button
                   type="button"
                   onClick={handleUploadClick}
-                  className={`text-gray-400 dark:text-gray-500 rounded-full w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors ${(isLoading || disabled) ? 'cursor-not-allowed opacity-50' : ''}`}
+                  className={`text-gray-400 dark:text-gray-500 rounded-full w-6 h-6 sm:w-8 sm:h-8 lg:w-8 lg:h-8 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors ${(isLoading || disabled) ? 'cursor-not-allowed opacity-50' : ''}`}
                   aria-label="Attach file"
                   disabled={isLoading || disabled}
                 >
-                  <HiMiniPaperClip size={12} className="sm:text-sm lg:text-base" />
+                  <HiMiniPaperClip size={16} className="sm:text-base lg:text-lg md:text-lg xl:text-xl" />
                 </button>
 
                 {/* Web Search Toggle Button */}
@@ -192,16 +192,16 @@ const ChatMessage = ({
                   <button
                     type="button"
                     onClick={toggleWebSearch}
-                    className="text-gray-400 dark:text-gray-500 rounded-full w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors"
+                    className="text-gray-400 dark:text-gray-500 rounded-full w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors"
                   >
-                    <BsGlobe2 size={10} className={`sm:text-xs lg:text-sm ${webSearchEnabled ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                    <BsGlobe2 size={16} className={`sm:text-sm lg:text-base ${webSearchEnabled ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`} />
                   </button>
                 )}
               </div>
 
               <button
                 type="submit"
-                className={`rounded-full w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center transition-all duration-200 ${(!inputMessage.trim() || isLoading || disabled)
+                className={`rounded-full w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 flex items-center justify-center transition-all duration-200 ${(!inputMessage.trim() || isLoading || disabled)
                   ? 'bg-white dark:bg-black text-black dark:text-white cursor-not-allowed'
                   : 'bg-white hover:bg-white/70 text-black'
                 } flex-shrink-0`}
@@ -209,9 +209,9 @@ const ChatMessage = ({
                 aria-label="Send message"
               >
                 {isLoading ? (
-                  <div className="animate-spin rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-3.5 lg:w-3.5 border-t border-b border-gray-400"></div>
+                  <div className="animate-spin rounded-full h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 border-t border-b border-gray-400"></div>
                 ) : (
-                  <IoSendSharp size={10} className="sm:text-xs lg:text-sm translate-x-[1px]" />
+                  <IoSendSharp size={12} className="sm:text-sm lg:text-base translate-x-[1px]" />
                 )}
               </button>
             </div>
