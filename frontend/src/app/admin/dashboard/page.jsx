@@ -90,14 +90,26 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setIsRefreshing(true);
-              const gptsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`, {
-                headers: {
-                    'Authorization': `Bearer ${getToken()}`,
-                    'Content-Type': 'application/json'
-                },
-                timeout: 5000
-            });
             
+            // Fetch GPTs and Users data in parallel
+            const [gptsResponse, usersResponse] = await Promise.all([
+                axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/gpt/all`, {
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 5000
+                }),
+                axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/teams`, {
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 5000
+                })
+            ]);
+            
+            // Process GPTs data
             if (gptsResponse.data.success) {
                 const gptsData = gptsResponse.data.customGpts;
                 
@@ -117,11 +129,19 @@ const AdminDashboard = () => {
                         knowledgeFiles: gpt.knowledgeFiles
                     }));
                 
+                // Process Users data
+                let totalUsers = 0;
+                if (usersResponse.data.success && usersResponse.data.teams) {
+                    // Add 1 to include the current admin user
+                    totalUsers = usersResponse.data.teams.length + 1;
+                }
+                
                 setDashboardData(prev => ({
                     ...prev,
                     recentGPTs,
                     totalGPTs: gptsData.length,
                     activeGPTs: gptsData.length, 
+                    totalUsers: totalUsers,
                     lastUpdated: new Date()
                 }));
             }
